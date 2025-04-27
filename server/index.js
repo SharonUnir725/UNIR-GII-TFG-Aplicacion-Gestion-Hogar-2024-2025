@@ -13,6 +13,10 @@ app.use(express.json()); // Permite recibir JSON en el body
 // Ruta de prueba
 app.get("/api", (req, res) => res.send("API funcionando correctamente"));
 
+// Rutas desde src/routes
+const userRoutes = require('./src/routes/userRoutes');
+app.use('/api/users', userRoutes);
+
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("Conectado a MongoDB"))

@@ -11,7 +11,7 @@ app.use(cors()); // Permite peticiones desde el frontend
 app.use(express.json()); // Permite recibir JSON en el body
 
 // Ruta de prueba
-app.get("/", (req, res) => res.send("API funcionando correctamente"));
+app.get("/api", (req, res) => res.send("API funcionando correctamente"));
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)

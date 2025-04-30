@@ -1,2 +1,5 @@
 # Ignorar variables de entorno
 server/.env
+# Ignorar dependencias de Node
+client/node_modules/
+server/node_modules/

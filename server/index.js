@@ -10,10 +10,11 @@ const app = express();
 app.use(cors()); // Permite peticiones desde el frontend
 app.use(express.json()); // Permite recibir JSON en el body
 
-// Ruta de prueba
-app.get("/api", (req, res) => res.send("API funcionando correctamente"));
+// Rutas de autenticación (register / login)
+const authRoutes = require('./src/routes/authRoutes');
+app.use('/api/auth', authRoutes);
 
-// Rutas desde src/routes
+// Rutas de usuario (CRUD)
 const userRoutes = require('./src/routes/userRoutes');
 app.use('/api/users', userRoutes);
 

@@ -7,16 +7,22 @@ require("dotenv").config();
 const app = express();
 
 // Middleware
-app.use(cors()); // Permite peticiones desde el frontend
-app.use(express.json()); // Permite recibir JSON en el body
+app.use(cors()); 
+app.use(express.json()); 
+//comprobar que el usuario está autenticado via JWT y provee req.user para rutas protegidas.
+const authenticate = require('./src/middleware/auth'); 
 
 // Rutas de autenticación (register / login)
 const authRoutes = require('./src/routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
-// Rutas de usuario (CRUD)
+// Rutas de usuario
 const userRoutes = require('./src/routes/userRoutes');
 app.use('/api/users', userRoutes);
+
+// Rutas de familias (usuarios autenticados)
+const familyRoutes = require('./src/routes/familyRoutes');
+app.use('/api/families', authenticate, familyRoutes);
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)

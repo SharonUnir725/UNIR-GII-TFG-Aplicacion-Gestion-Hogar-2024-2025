@@ -1,4 +1,4 @@
-// server/src/models/User.js
+// server/src/models/user.js
 const { Schema, model, Types } = require('mongoose');
 
 const UserSchema = new Schema({

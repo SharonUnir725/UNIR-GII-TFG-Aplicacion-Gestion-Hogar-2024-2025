@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Register from './pages/Register';
 import Login    from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import CreateFamily from './pages/CreateFamily';
 
 function App() {
   //Comprobar localStorage tras el login
@@ -25,6 +26,14 @@ function App() {
                    <Dashboard />
                  </PrivateRoute>
                }
+        />
+        <Route
+          path="/dashboard/create-family"
+          element={
+            <PrivateRoute>
+              <CreateFamily />
+            </PrivateRoute>
+          }
         />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>

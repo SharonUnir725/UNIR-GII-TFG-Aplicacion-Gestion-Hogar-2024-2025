@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Login    from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import CreateFamily from './pages/CreateFamily';
+import JoinFamily    from './pages/JoinFamily';
 
 function App() {
   //Comprobar localStorage tras el login
@@ -27,6 +28,7 @@ function App() {
                  </PrivateRoute>
                }
         />
+        {/* Ruta protegida para crear una familia */}
         <Route
           path="/dashboard/create-family"
           element={
@@ -35,6 +37,16 @@ function App() {
             </PrivateRoute>
           }
         />
+        {/* Ruta protegida para asociarse a una familia */}
+        <Route
+          path="/dashboard/join-family"
+          element={
+            <PrivateRoute>
+              <JoinFamily />
+            </PrivateRoute>
+          }
+        />
+        {/* Ruta catch-all */}
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>

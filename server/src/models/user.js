@@ -20,7 +20,7 @@ const UserSchema = new Schema({
   email: {
     type: String,
     required: true,
-    unique: true,      // será el "username" para login
+    unique: true,      // "username" para login
     lowercase: true,
     trim: true
   },

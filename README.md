@@ -9,3 +9,6 @@ git status
 git add .
 git commit -m "Tu mensaje de commit"
 git push
+
+server: node index.js (localhost 5000)
+client: npm start (localhost 3000)

@@ -10,13 +10,12 @@ router.post('/', async (req, res) => {
   try {
     const { name }     = req.body;       // sólo se recibe el nombre
     const ownerId       = req.user.id;   // inyectado por el middleware
-    // creas la familia con el owner que esté «logueado»
+    // Crear la familia con el owner que esté «logueado»
     const family = await Family.create({
       name,
       owner:   ownerId,
-      members: [ ownerId ]
     });
-    // 2) Asociar el familyId al usuario admin
+    // Asociar el familyId al usuario admin
     await User.findByIdAndUpdate(ownerId, { familyId: family._id });
     res.status(201).json(family);
   } catch (err) {
@@ -28,12 +27,20 @@ router.post('/', async (req, res) => {
 // Devuelve una familia concreta, con owners y members poblados
 router.get('/:id', async (req, res) => {
   try {
+    const { id } = req.params;
+
+    // Obtener datos de la familia
     const family = await Family
-      .findById(req.params.id)
-      .populate('owner', 'firstName lastName1')
-      .populate('members', 'firstName lastName1');
+      .findById(id)
+      .select('_id name owner createdAt updatedAt')
+      .lean();
+
     if (!family) return res.status(404).json({ error: 'Family not found' });
-    res.json(family);
+
+    // Calcular número de miembros consultando users
+    const memberCount = await User.countDocuments({ familyId: id });
+
+    res.json({ ...family, memberCount });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

@@ -11,20 +11,11 @@ const FamilySchema = new Schema({
     type: Types.ObjectId,
     ref: 'User',
     required: true,
-  },
-  members: [{
-    type: Types.ObjectId,
-    ref: 'User'
-  }]
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
-});
-
-// Virtual para contar miembros
-FamilySchema.virtual('memberCount').get(function() {
-  return this.members.length;
 });
 
 module.exports = model('Family', FamilySchema);

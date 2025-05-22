@@ -67,4 +67,15 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+//POST /api/families/:id/join-request
+
+
+//GET /api/families/:id/join-requests
+
+
+//PUT /api/families/:id/join-requests/:rid/approve
+
+
+//PUT /api/families/:id/join-requests/:rid/reject
+
 module.exports = router;

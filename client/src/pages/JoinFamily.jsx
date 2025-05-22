@@ -1,7 +1,6 @@
 // client/src/pages/JoinFamily.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
 export default function JoinFamily() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -9,7 +8,6 @@ export default function JoinFamily() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const nav = useNavigate();
 
   const handleSearch = async e => {
     e.preventDefault();

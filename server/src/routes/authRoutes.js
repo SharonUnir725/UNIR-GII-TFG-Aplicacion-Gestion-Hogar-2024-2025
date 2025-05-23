@@ -3,6 +3,7 @@ const { Router }    = require('express');
 const bcrypt        = require('bcrypt');
 const jwt           = require('jsonwebtoken');
 const User          = require('../models/user');
+const auth = require('../middleware/auth');
 
 const router = Router();
 
@@ -69,6 +70,22 @@ router.post('/login', async (req, res) => {
         role: user.role
       }
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Obtener perfil del usuario autenticado
+// GET /api/auth/me
+router.get('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select('firstName lastName1 lastName2 email')
+      .lean();
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

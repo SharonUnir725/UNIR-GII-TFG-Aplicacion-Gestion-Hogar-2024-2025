@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from '../components/PrivateRoute';
 import Login        from '../pages/Login';
 import Register     from '../pages/Register';
+import Logout        from '../pages/Logout';
 import Dashboard    from '../pages/Dashboard';
 import CreateFamily from '../pages/CreateFamily';
 import JoinFamily   from '../pages/JoinFamily';
@@ -15,6 +16,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login"    element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/logout" element={<Logout />}/>
 
       <Route
         path="/dashboard"

@@ -3,8 +3,19 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
+/**
+ * Protege rutas para usuarios autenticados.
+ * Mientras carga el perfil muestra un indicador.
+ * Si no hay usuario, redirige al login.
+ */
 export default function PrivateRoute({ children }) {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" replace />;
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <p>Cargando usuario...</p>;
+  }
+  return user
+    ? children
+    : <Navigate to="/login" replace />;
 }

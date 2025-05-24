@@ -1,20 +1,15 @@
 // client/src/pages/Dashboard.jsx
-import React from 'react';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
-  const nav = useNavigate();
   const { user, loading } = useAuth();
-  const [notifCount, setNotifCount] = React.useState(0);
-  const logout = () => {
-    localStorage.removeItem('token');
-    nav('/login');
-  };
+  const [notifCount, setNotifCount] = useState(0);
 
-  React.useEffect(() => {
+  // Cargar notificaciones pendientes al montar
+  useEffect(() => {
     async function fetchNotifs() {
       try {
         const token = localStorage.getItem('token');
@@ -25,7 +20,7 @@ export default function Dashboard() {
         );
         setNotifCount(res.data.length);
       } catch (err) {
-        console.error('Error fetching notifications:', err);
+        console.error('Error al obtener notificaciones:', err);
       }
     }
     fetchNotifs();
@@ -34,8 +29,9 @@ export default function Dashboard() {
   if (loading) {
     return <p>Cargando perfil...</p>;
   }
-   // Si no hay usuario, redirige al login
-   if (!user) {
+
+  // Si no hay usuario válido, redirige al login
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
@@ -47,7 +43,7 @@ export default function Dashboard() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Bienvenido a tu Dashboard</h1>
         <Link to="/dashboard/notifications" className="relative">
-          <Bell size={24} className="text-gray-700 hover:text-gray-900" />
+          <span role="img" aria-label="notificaciones" className="text-2xl">🔔</span>
           {notifCount > 0 && (
             <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
               {notifCount}
@@ -66,12 +62,11 @@ export default function Dashboard() {
             Asociarse a una familia
           </button>
         </Link>
-        <button
-          onClick={logout}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700"
-        >
-          Logout
-        </button>
+        <Link to="/logout">
+          <button className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700">
+            Logout
+          </button>
+        </Link>
       </div>
     </div>
   );

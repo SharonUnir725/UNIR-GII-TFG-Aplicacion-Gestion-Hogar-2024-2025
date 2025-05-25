@@ -7,11 +7,11 @@ const router = Router();
 
 // Listar todos los usuarios
 // GET /api/users
-router.get('/', auth, listUsers);
+router.get('/', listUsers);
 
 // Obtener un usuario por su ID
 // GET /api/users/:id
-router.get('/:id', auth, getUserById);
+router.get('/:id', getUserById);
 
 // Crear nuevo usuario
 // POST /api/users
@@ -23,6 +23,6 @@ router.put('/:id', auth, updateUser);
 
 // Eliminar un usuario
 // DELETE /api/users/:id
-router.delete('/:id', auth, deleteUser);
+router.delete('/:id', deleteUser);
 
 module.exports = router;

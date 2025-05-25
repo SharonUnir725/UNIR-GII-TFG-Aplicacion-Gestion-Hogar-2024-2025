@@ -1,22 +1,28 @@
-//server/src/routes/userRoutes.js
+// src/routes/userRoutes.js
 const { Router } = require('express');
-const User = require('../models/user'); 
+const auth = require('../middleware/auth');
+const { listUsers, getUserById, createUser, updateUser, deleteUser } = require('../controllers/userController');
 
 const router = Router();
 
-router.get('/', async (req, res) => {
-  const users = await User.find().select('-password');
-  res.json(users);
-});
+// Listar todos los usuarios
+// GET /api/users
+router.get('/', auth, listUsers);
 
-router.post('/', async (req, res) => {
-  try {
-    const u = new User(req.body);
-    await u.save();
-    res.status(201).json(u);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+// Obtener un usuario por su ID
+// GET /api/users/:id
+router.get('/:id', auth, getUserById);
+
+// Crear nuevo usuario
+// POST /api/users
+router.post('/', createUser);
+
+// Actualizar un usuario existente
+// PUT /api/users/:id
+router.put('/:id', auth, updateUser);
+
+// Eliminar un usuario
+// DELETE /api/users/:id
+router.delete('/:id', auth, deleteUser);
 
 module.exports = router;

@@ -9,7 +9,8 @@ export default function CreateFamily() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    setError(''); setSuccess('');
+    setError('');
+    setSuccess('');
     try {
       // Coge el token del localStorage
       const token = localStorage.getItem('token');
@@ -18,9 +19,13 @@ export default function CreateFamily() {
         { name },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSuccess(`Family "${res.data.name}" created (ID: ${res.data._id})`);
-      // redirigir al detalle de familia
-      //nav(`/families/${res.data._id}`);
+
+      // Ajuste: extrae el objeto family de la respuesta
+      const { family } = res.data;
+
+      setSuccess(`Family "${family.name}" created (ID: ${family._id})`);
+      // redirigir al detalle de familia (Después de crear la familia) - en progreso
+      // nav(`/families/${family._id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al crear la familia');
     }

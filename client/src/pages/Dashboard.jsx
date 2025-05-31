@@ -18,7 +18,8 @@ export default function Dashboard() {
           `${baseUrl}/api/notifications`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setNotifCount(res.data.length);
+        const pendingOnly = res.data.filter(n => n.status === 'pending');
+        setNotifCount(pendingOnly.length);
       } catch (err) {
         console.error('Error al obtener notificaciones:', err);
       }

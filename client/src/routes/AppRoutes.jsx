@@ -2,21 +2,22 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-import PrivateRoute from '../components/PrivateRoute';
-import Login        from '../pages/Login';
-import Register     from '../pages/Register';
-import Logout        from '../pages/Logout';
-import Dashboard    from '../pages/Dashboard';
-import CreateFamily from '../pages/CreateFamily';
-import JoinFamily   from '../pages/JoinFamily';
-import Notifications from '../pages/Notifications';
+import PrivateRoute        from '../components/PrivateRoute';
+import Login               from '../pages/Login';
+import Register            from '../pages/Register';
+import Logout              from '../pages/Logout';
+import Dashboard           from '../pages/Dashboard';
+import CreateFamily        from '../pages/CreateFamily';
+import JoinFamily          from '../pages/JoinFamily';
+import Notifications       from '../pages/Notifications';
+import NotificationDetail  from '../pages/NotificationDetail'; // ← Importamos el detalle
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login"    element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/logout" element={<Logout />}/>
+      <Route path="/logout"   element={<Logout />} />
 
       <Route
         path="/dashboard"
@@ -26,6 +27,7 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
+
       <Route
         path="/dashboard/create-family"
         element={
@@ -34,6 +36,7 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
+
       <Route
         path="/dashboard/join-family"
         element={
@@ -42,11 +45,23 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
+
+      {/* Lista de notificaciones */}
       <Route
         path="/dashboard/notifications"
         element={
           <PrivateRoute>
             <Notifications />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Detalle de una notificación (marcar leída y aprobar/rechazar) */}
+      <Route
+        path="/dashboard/notifications/:nid"
+        element={
+          <PrivateRoute>
+            <NotificationDetail />
           </PrivateRoute>
         }
       />

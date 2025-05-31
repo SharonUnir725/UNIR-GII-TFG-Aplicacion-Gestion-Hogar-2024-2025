@@ -9,6 +9,7 @@ const app = express();
 // Middleware
 app.use(cors()); 
 app.use(express.json()); 
+
 //comprobar que el usuario está autenticado via JWT y provee req.user para rutas protegidas.
 const authenticate = require('./src/middleware/auth'); 
 
@@ -24,12 +25,17 @@ app.use('/api/users', userRoutes);
 const familyRoutes = require('./src/routes/familyRoutes');
 app.use('/api/families', authenticate, familyRoutes);
 
+// Rutas de notificaciones (usuarios autenticados)**
+const notificationRoutes = require('./src/routes/notificationRoutes');
+app.use('/api/notifications', authenticate, notificationRoutes);
+
+
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("Conectado a MongoDB"))
   .catch(err => console.error("Error de conexión a MongoDB:", err));
 
-// Puerto del servidor
+// Iniciar servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor escuchando en puerto ${PORT}`));
 

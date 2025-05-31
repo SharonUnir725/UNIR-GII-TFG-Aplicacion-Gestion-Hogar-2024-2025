@@ -1,8 +1,16 @@
 // src/routes/familyRoutes.js
 const { Router } = require('express');
-const auth     = require('../middleware/auth');
-const { createFamily, searchFamilies, getFamilyById } = require('../controllers/familyController');
-const { createJoinRequest } = require('../controllers/joinRequestController');
+const auth      = require('../middleware/auth');
+const {
+  createFamily,
+  searchFamilies,
+  getFamilyById
+} = require('../controllers/familyController');
+const {
+  createJoinRequest,
+  approveRequest,
+  rejectRequest
+} = require('../controllers/joinRequestController');
 
 const router = Router();
 
@@ -22,5 +30,12 @@ router.get('/:id', auth, getFamilyById);
 // POST /api/families/:id/join-request
 router.post('/:id/join-request', auth, createJoinRequest);
 
-module.exports = router;
+// Aprobar solicitud de unión
+// PUT /api/families/:id/join-requests/:rid/approve
+router.put('/:id/join-requests/:rid/approve', auth, approveRequest);
 
+// Rechazar solicitud de unión
+// PUT /api/families/:id/join-requests/:rid/reject
+router.put('/:id/join-requests/:rid/reject', auth, rejectRequest);
+
+module.exports = router;

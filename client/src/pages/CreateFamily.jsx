@@ -1,11 +1,13 @@
 // client/src/pages/CreateFamily.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function CreateFamily() {
   const [name, setName]       = useState('');
   const [error, setError]     = useState('');
   const [success, setSuccess] = useState('');
+  const nav = useNavigate();
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -48,6 +50,9 @@ export default function CreateFamily() {
           Create
         </button>
       </form>
+      <button onClick={() => nav('/dashboard')} style={{ marginTop: '2rem' }}>
+        ← Volver al Dashboard
+      </button>
     </div>
   );
 }

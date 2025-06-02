@@ -68,6 +68,39 @@ exports.createJoinRequest = async (req, res) => {
 };
 
 /**
+ * Listar todas las solicitudes de unión de una familia (solo owner)
+ * GET /api/families/:id/join-requests
+ */
+exports.listJoinRequestsByFamily = async (req, res) => {
+  try {
+    const familyId = req.params.id;
+    const userId   = req.user.id;
+
+    // 1) Validar formato de ID de familia
+    if (!isValidId(familyId)) {
+      return res.status(400).json({ error: 'ID de familia no válido' });
+    }
+
+    // 2) Verificar que la familia existe y que quien hace la petición es el owner
+    const family = await Family.findById(familyId);
+    if (!family) {
+      return res.status(404).json({ error: 'Familia no encontrada' });
+    }
+    if (family.owner.toString() !== userId) {
+      return res.status(403).json({ error: 'No tienes permisos para ver estas solicitudes' });
+    }
+
+    // 3) Obtener todas las solicitudes de esa familia
+    const joinRequests = await JoinRequest.find({ family: familyId }).sort('-createdAt').lean();
+    return res.json(joinRequests);
+  } catch (err) {
+    console.error('Error en listJoinRequestsByFamily:', err);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+
+/**
  * Aprobar solicitud de unión
  * PUT /api/families/:id/join-requests/:rid/approve
  */

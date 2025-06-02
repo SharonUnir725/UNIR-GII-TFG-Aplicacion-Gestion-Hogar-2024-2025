@@ -1,12 +1,14 @@
 // client/src/pages/JoinFamily.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function JoinFamily() {
   const [query, setQuery]       = useState('');
   const [families, setFamilies] = useState([]);
   const [error, setError]       = useState('');
   const [success, setSuccess]   = useState('');
+  const nav = useNavigate();
 
   // 1) Buscar familias
   const handleSearch = async e => {
@@ -83,6 +85,9 @@ export default function JoinFamily() {
           </li>
         ))}
       </ul>
+      <button onClick={() => nav('/dashboard')} style={{ marginTop: '2rem' }}>
+        ← Volver al Dashboard
+      </button>
     </div>
   );
 }

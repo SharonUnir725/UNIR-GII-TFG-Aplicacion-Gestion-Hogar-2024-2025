@@ -8,6 +8,7 @@ const {
 } = require('../controllers/familyController');
 const {
   createJoinRequest,
+  listJoinRequestsByFamily,
   approveRequest,
   rejectRequest
 } = require('../controllers/joinRequestController');
@@ -29,6 +30,10 @@ router.get('/:id', auth, getFamilyById);
 // Crear solicitud de unión a familia
 // POST /api/families/:id/join-request
 router.post('/:id/join-request', auth, createJoinRequest);
+
+// Listar todas las solicitudes de unión de una familia (para owner)
+// GET /api/families/:id/join-requests
+router.get('/:id/join-requests', auth, listJoinRequestsByFamily);
 
 // Aprobar solicitud de unión
 // PUT /api/families/:id/join-requests/:rid/approve

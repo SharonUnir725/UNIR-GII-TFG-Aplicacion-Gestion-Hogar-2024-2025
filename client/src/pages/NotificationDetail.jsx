@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 
-// Importar el subcomponente para "join_request"
+// Subcomponentes para cada tipo. Hoy solo tenemo AssocDetail.
 import AssocDetail from '../components/AssocDetail';
 
 export default function NotificationDetail() {
@@ -17,13 +17,14 @@ export default function NotificationDetail() {
     async function fetchAndMark() {
       try {
         const token = localStorage.getItem('token');
+
         // 1) Obtener la notificación completa
         const resNotif = await axios.get(`/api/notifications/${nid}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         setNotif(resNotif.data);
 
-        // 2) Marcar como leída si está en "pending"
+        // 2) Si el estado es 'pending', marcarla como leída
         if (resNotif.data.status === 'pending') {
           await axios.put(
             `/api/notifications/${nid}/read`,
@@ -37,45 +38,25 @@ export default function NotificationDetail() {
         setLoading(false);
       }
     }
+
     fetchAndMark();
   }, [nid]);
-
-  // Manejar la decisión de aprobar/rechazar
-  const handleDecision = async (action) => {
-    setError('');
-    try {
-      const token = localStorage.getItem('token');
-      // Llamar al endpoint de approve/reject para join_request
-      await axios.put(
-        `/api/families/${notif.family}/join-requests/${notif.payload.requestId}/${action}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      // Volver a lista de notificaciones
-      nav('/dashboard/notifications');
-    } catch {
-      setError('Error al procesar la solicitud');
-    }
-  };
 
   if (loading) return <p>Cargando detalle de notificación…</p>;
   if (!notif)  return <p>No se encontró la notificación.</p>;
 
-  // Escoger subcomponente según el tipo de notificación
-  let DetailComponent;
-  switch (notif.type) {
-    case 'join_request':
-      DetailComponent = () => <AssocDetail notification={notif} onDecision={handleDecision} />;
-      break;
-    default:
-      DetailComponent = () => <p>Tipo de notificación desconocido.</p>;
-  }
-
+  // Según el tipo, mostramos un subcomponente específico:
   return (
     <div style={{ maxWidth: 600, margin: '2rem auto' }}>
       <h2>Notificación</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <DetailComponent />
+
+      {notif.type === 'join_request' ? (
+        <AssocDetail notification={notif} />
+      ) : (
+        <p>Tipo de notificación desconocido.</p>
+      )}
+
       <button
         onClick={() => nav('/dashboard/notifications')}
         style={{ marginTop: '2rem' }}

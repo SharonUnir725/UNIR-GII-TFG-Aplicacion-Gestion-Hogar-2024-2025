@@ -45,24 +45,67 @@ export default function NotificationDetail() {
   if (loading) return <p>Cargando detalle de notificación…</p>;
   if (!notif)  return <p>No se encontró la notificación.</p>;
 
-  // Según el tipo, mostramos un subcomponente específico:
-  return (
-    <div style={{ maxWidth: 600, margin: '2rem auto' }}>
-      <h2>Notificación</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+  // Renderizar un bloque distinto según notif.type
+  switch (notif.type) {
+    case 'join_request':
+      return (
+        <div style={{ maxWidth: 600, margin: '2rem auto' }}>
+          <h2>Solicitud de unión</h2>
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+          <AssocDetail notification={notif} />
+          <button
+            onClick={() => nav('/dashboard/notifications')}
+            style={{ marginTop: '2rem' }}
+          >
+            ← Volver a Notificaciones
+          </button>
+        </div>
+      );
 
-      {notif.type === 'join_request' ? (
-        <AssocDetail notification={notif} />
-      ) : (
-        <p>Tipo de notificación desconocido.</p>
-      )}
+    case 'join_approved':
+      return (
+        <div style={{ maxWidth: 600, margin: '2rem auto' }}>
+          <h2>Solicitud de asociación aprobada</h2>
+          <div style={{ border: '1px solid #ccc', padding: '1rem' }}>
+            <p>Tu solicitud ha sido aprobada. ¡Bienvenido a la familia!</p>
+          </div>
+          <button
+            onClick={() => nav('/dashboard/notifications')}
+            style={{ marginTop: '2rem' }}
+          >
+            ← Volver a Notificaciones
+          </button>
+        </div>
+      );
 
-      <button
-        onClick={() => nav('/dashboard/notifications')}
-        style={{ marginTop: '2rem' }}
-      >
-        ← Volver a Notificaciones
-      </button>
-    </div>
-  );
+    case 'join_rejected':
+      return (
+        <div style={{ maxWidth: 600, margin: '2rem auto' }}>
+          <h2>Solicitud de asociación denegada</h2>
+          <div style={{ border: '1px solid #ccc', padding: '1rem' }}>
+            <p>Lo sentimos, tu solicitud ha sido rechazada.</p>
+          </div>
+          <button
+            onClick={() => nav('/dashboard/notifications')}
+            style={{ marginTop: '2rem' }}
+          >
+            ← Volver a Notificaciones
+          </button>
+        </div>
+      );
+
+    default:
+      return (
+        <div style={{ maxWidth: 600, margin: '2rem auto' }}>
+          <h2>Notificación</h2>
+          <p>Tipo de notificación desconocido.</p>
+          <button
+            onClick={() => nav('/dashboard/notifications')}
+            style={{ marginTop: '2rem' }}
+          >
+            ← Volver a Notificaciones
+          </button>
+        </div>
+      );
+  }
 }

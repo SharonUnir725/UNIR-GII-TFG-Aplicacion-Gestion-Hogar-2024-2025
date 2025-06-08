@@ -25,9 +25,13 @@ app.use('/api/users', userRoutes);
 const familyRoutes = require('./src/routes/familyRoutes');
 app.use('/api/families', authenticate, familyRoutes);
 
-// Rutas de notificaciones (usuarios autenticados)**
+// Rutas de notificaciones (usuarios autenticados)
 const notificationRoutes = require('./src/routes/notificationRoutes');
 app.use('/api/notifications', authenticate, notificationRoutes);
+
+// Rutas de direcciones (usuarios autenticados)
+const addressRoutes = require('./src/routes/addressRoutes');
+app.use('/api/address', authenticate, addressRoutes);
 
 
 // Conexión a MongoDB

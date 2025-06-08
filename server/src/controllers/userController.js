@@ -6,11 +6,22 @@ const isValidId = require('../helpers/isValidId');
 // GET /api/users
 exports.listUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-passwordHash');
-    res.json(users);
+    const { familyId } = req.query;
+
+    // Si viene familyId, filtramos; si no, devolvemos todos
+    const filter = familyId ? { familyId } : {};
+
+    const users = await User
+      .find(filter)
+      .select('-passwordHash -__v')
+      .lean();
+
+    return res.json(users);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error interno al listar usuarios' });
+    console.error('[userController.listUsers]', err);
+    return res
+      .status(500)
+      .json({ error: 'Error interno al listar usuarios' });
   }
 };
 

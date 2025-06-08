@@ -1,6 +1,6 @@
 // src/controllers/familyController.js
-const Family = require('../models/family');
-const User   = require('../models/user');
+const Family    = require('../models/family');
+const User      = require('../models/user');
 const isValidId = require('../helpers/isValidId');
 
 //**Crear nueva familia
@@ -45,23 +45,46 @@ exports.searchFamilies = async (req, res) => {
   }
 };
 
-//**Obtener datos de una familia por su ID (incluye recuento de miembros)
+//**Obtener datos de una familia por su ID (incluye recuento de miembros y nombre del administrador)
 // GET /api/families/:id
 exports.getFamilyById = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!isValidId(id)) return res.status(400).json({ error: 'ID de familia no válido' });
+    if (!isValidId(id)) {
+      return res.status(400).json({ error: 'ID de familia no válido' });
+    }
 
+    // 1) Obtener la familia
     const family = await Family.findById(id)
       .select('_id name owner createdAt updatedAt')
       .lean();
-    if (!family) return res.status(404).json({ error: 'Familia no encontrada' });
+    if (!family) {
+      return res.status(404).json({ error: 'Familia no encontrada' });
+    }
 
-    // Contar miembros con este familyId
+    // 2) Contar miembros con este familyId
     const memberCount = await User.countDocuments({ familyId: id });
-    res.json({ ...family, memberCount });
+
+    // 3) Obtener nombre del administrador (owner)
+    const ownerUser = await User.findById(family.owner)
+      .select('firstName lastName1 lastName2')
+      .lean();
+    const ownerName = ownerUser
+      ? `${ownerUser.firstName} ${ownerUser.lastName1} ${ownerUser.lastName2}`
+      : '';
+
+    // 4) Responder con todos los datos
+    return res.json({
+      _id:         family._id,
+      name:        family.name,
+      owner:       family.owner,
+      createdAt:   family.createdAt,
+      updatedAt:   family.updatedAt,
+      memberCount,
+      ownerName
+    });
   } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: err.message });
+    console.error('[familyController.getFamilyById]', err);
+    return res.status(500).json({ error: 'Error interno al obtener la familia' });
   }
 };

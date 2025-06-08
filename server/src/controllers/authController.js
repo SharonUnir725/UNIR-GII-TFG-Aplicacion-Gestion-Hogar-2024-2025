@@ -85,7 +85,7 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const usuario = await User.findById(req.user.id)
-      .select('firstName lastName1 lastName2 email')
+      .select('firstName lastName1 lastName2 email role familyId')
       .lean();
     if (!usuario) {
       return res.status(404).json({ error: 'Usuario no encontrado' });

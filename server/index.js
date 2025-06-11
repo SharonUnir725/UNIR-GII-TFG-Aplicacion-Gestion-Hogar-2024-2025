@@ -33,6 +33,9 @@ app.use('/api/notifications', authenticate, notificationRoutes);
 const addressRoutes = require('./src/routes/addressRoutes');
 app.use('/api/address', authenticate, addressRoutes);
 
+// Rutas de tareas (usuarios autenticados)
+const taskRoutes = require('./src/routes/taskRoutes');
+app.use('/api/tasks', authenticate, taskRoutes);
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)

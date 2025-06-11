@@ -2,11 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NavTabs     from '../components/NavTabs';
 import AddressForm from '../components/AddressForm';
 import MembersList from '../components/MembersList';
-import { useNavigate } from 'react-router-dom';
+import TasksTab from '../components/TasksTab'
 
 export default function FamilyDashboard() {
   const { token, user, loading } = useAuth();
@@ -121,7 +122,7 @@ export default function FamilyDashboard() {
         {activeTab === 'tareas' && (
           <section>
             <h2 className="text-xl font-semibold mb-4">Lista de Tareas</h2>
-            <p>(Próximamente)</p>
+            <TasksTab />
           </section>
         )}
       </main>

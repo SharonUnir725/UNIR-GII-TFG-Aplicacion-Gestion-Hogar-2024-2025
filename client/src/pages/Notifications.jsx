@@ -56,8 +56,11 @@ export default function Notifications() {
                 title = 'Solicitud de asociación denegada';
                 break;
               case 'new_task':
-                title = 'Una nueva tarea';
+                title = 'Te han asignado una nueva tarea.';
                 break;
+              case 'modified_task':
+                title = 'Una tarea ha sido modificada.'
+                break
               case 'new_event':
                 title = 'Un nuevo evento';
                 break;

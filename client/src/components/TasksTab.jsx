@@ -67,16 +67,22 @@ export default function TasksTab() {
         { status: next },
         { headers }
       );
-      const updated = res.data;
-      setTasks(prev => prev.map(t => t._id === updated._id ? updated : t));
-      setSelectedTask(updated);
-      axios.post(
+      setTasks(prev => prev.map(t => t._id === res.data._id ? res.data : t));
+      setSelectedTask(res.data);
+      // notificación de modificación
+      await axios.post(
         `${apiBase}/api/notifications`,
         {
-          type: 'tarea',
-          taskId: updated._id,
-          recipients: updated.assignedTo,
-          payload: updated
+          type: 'modified_task',
+          taskId: res.data._id,
+          recipients: res.data.assignedTo,
+          payload: {
+            title: res.data.title,
+            description: res.data.description,
+            dueDate: res.data.dueDate,
+            priority: res.data.priority,
+            status: res.data.status
+          }
         },
         { headers }
       ).catch(() => {});
@@ -140,8 +146,8 @@ export default function TasksTab() {
                       onClick={() => setSelectedTask(task)}
                       className="cursor-pointer p-2 border rounded hover:bg-gray-100"
                     >
-                      <span className="font-medium">{task.title}</span>
-                      <span className="ml-2 text-sm text-gray-500"> (Prioridad: {capitalize(task.priority)})</span>
+                      <strong className="font-medium">{task.title}</strong>
+                      <span className="ml-2 text-sm text-gray-500"> Prioridad: {capitalize(task.priority)} - Estado: {STATUS_LABELS[task.status]}</span>
                     </li>
                   ))}
                 </ul>
@@ -160,7 +166,6 @@ export default function TasksTab() {
                       className="cursor-pointer p-2 border rounded hover:bg-gray-100"
                     >
                       <span className="font-medium">{task.title}</span>
-                      <span className="ml-2 text-sm text-gray-500"> (Prioridad: {capitalize(task.priority)})</span>
                     </li>
                   ))}
                 </ul>

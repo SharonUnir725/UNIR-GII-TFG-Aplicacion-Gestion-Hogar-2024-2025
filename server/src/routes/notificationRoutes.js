@@ -4,7 +4,8 @@ const authenticate = require('../middleware/auth');
 const {
   listNotifications,
   getNotification,
-  markAsRead
+  markAsRead,
+  createNotification
 } = require('../controllers/notificationController');
 
 const router = Router();
@@ -20,5 +21,9 @@ router.get('/:nid', authenticate, getNotification);
 // Marcar notificación como leída
 // PUT /api/notifications/:nid/read
 router.put('/:nid/read', authenticate, markAsRead);
+
+// Crear notificación
+// POST /api/notifications
+router.post('/', authenticate, createNotification)
 
 module.exports = router;

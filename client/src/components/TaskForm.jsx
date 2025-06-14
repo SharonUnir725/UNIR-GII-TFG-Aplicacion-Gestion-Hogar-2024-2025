@@ -49,9 +49,10 @@ export default function TaskForm({ members, task, onCancel, onCreated, onUpdated
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    const body = { title, description, dueDate, priority, assignedTo }
+
     try {
       let savedTask
-      const body = { title, description, dueDate, priority, assignedTo }
       if (task) {
         // editar
         const res = await axios.put(
@@ -61,6 +62,25 @@ export default function TaskForm({ members, task, onCancel, onCreated, onUpdated
         )
         savedTask = res.data
         onUpdated && onUpdated(savedTask)
+
+        // 2) Notificación de tarea modificada
+        await axios.post(
+          `${apiBase}/api/notifications`,
+          {
+            type: 'modified_task',
+            taskId: savedTask._id,
+            recipients: assignedTo,
+            payload: {
+              title: savedTask.title,
+              description: savedTask.description,
+              dueDate: savedTask.dueDate,
+              priority: savedTask.priority,
+              status: savedTask.status
+            }
+          },
+          { headers }
+        )
+
       } else {
         // crear
         const res = await axios.post(
@@ -69,21 +89,25 @@ export default function TaskForm({ members, task, onCancel, onCreated, onUpdated
           { headers }
         )
         savedTask = res.data
-        // crear notificación, no bloquear error
-        try {
-          await axios.post(
-            `${apiBase}/api/notifications`,
-            {
-              type: 'tarea',
-              taskId: savedTask._id,
-              recipients: assignedTo
-            },
-            { headers }
-          )
-        } catch {
-          // omitimos error de notificaciones
-        }
         onCreated && onCreated(savedTask)
+
+        // 1) Notificación de nueva tarea
+        await axios.post(
+          `${apiBase}/api/notifications`,
+          {
+            type: 'new_task',
+            taskId: savedTask._id,
+            recipients: assignedTo,
+            payload: {
+              title: savedTask.title,
+              description: savedTask.description,
+              dueDate: savedTask.dueDate,
+              priority: savedTask.priority,
+              status: savedTask.status
+            }
+          },
+          { headers }
+        )
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Error guardando tarea.')
@@ -149,7 +173,7 @@ export default function TaskForm({ members, task, onCancel, onCreated, onUpdated
                 onChange={() => toggleAssign(m._id)}
                 className="mr-2"
               />
-              <span>{m.firstName} {m.lastName1}</span>
+              <span>{m.firstName}</span>
             </label>
           ))}
         </div>

@@ -93,7 +93,39 @@ export default function NotificationDetail() {
           </button>
         </div>
       );
-
+    
+      case 'new_task':
+      return (
+        <div className="max-w-lg mx-auto p-6 bg-white border rounded shadow">
+          <h2 className="text-xl font-bold mb-4">Nueva tarea asignada</h2>
+          <p><strong>Título:</strong> {notif.payload.title}</p>
+          <p><strong>Prioridad:</strong> {notif.payload.priority}</p>
+          <p><strong>Vence:</strong> {new Date(notif.payload.dueDate).toLocaleDateString()}</p>
+          <p><strong>Descripción:</strong> {notif.payload.description}</p>
+          <button
+            onClick={() => nav('/dashboard/notifications')}
+            style={{ marginTop: '2rem' }}
+          >
+            ← Volver a Notificaciones
+          </button>
+        </div>
+      );
+    case 'modified_task':
+      return (
+        <div className="max-w-lg mx-auto p-6 bg-white border rounded shadow">
+          <h2 className="text-xl font-bold mb-4">Tarea modificada</h2>
+          <p><strong>Título:</strong> {notif.payload.title}</p>
+          <p><strong>Prioridad:</strong> {notif.payload.priority}</p>
+          <p><strong>Estado:</strong> {notif.payload.status}</p>
+          <p><strong>Descripción:</strong> {notif.payload.description}</p>
+          <button
+            onClick={() => nav('/dashboard/notifications')}
+            style={{ marginTop: '2rem' }}
+          >
+            ← Volver a Notificaciones
+          </button>
+        </div>
+      );
     default:
       return (
         <div style={{ maxWidth: 600, margin: '2rem auto' }}>

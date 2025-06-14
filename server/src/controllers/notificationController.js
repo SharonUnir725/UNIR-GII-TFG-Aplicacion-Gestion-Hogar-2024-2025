@@ -1,5 +1,6 @@
 // src/controllers/notificationController.js
 const Notification = require('../models/notification');
+const User         = require('../models/user');
 const isValidId    = require('../helpers/isValidId');
 
 //**Listar todas las notificaciones del usuario autenticado
@@ -52,5 +53,39 @@ exports.markAsRead = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+//**Crear una o varias notificaciones
+// POST /api/notifications
+exports.createNotification = async (req, res, next) => {
+  try {
+    // 1) Recuperar familyId del usuario autenticado
+    const userRecord = await User.findById(req.user.id, 'familyId');
+    if (!userRecord?.familyId) {
+      return res.status(400).json({ message: 'Usuario sin familia asignada' });
+    }
+    const familyId = userRecord.familyId;
+
+    // 2) Extraer datos de la petición
+    const { type, taskId, recipients = [], payload = {} } = req.body;
+    const recs = Array.isArray(recipients) ? recipients : [recipients];
+
+    // 3) Construir un documento por destinatario
+    const docs = recs.map(userId => ({
+      family:     familyId,
+      recipient:  userId,
+      type,                   // debe ser 'new_task' o 'modified_task'
+      payload,                // el objeto con title, description, dueDate, etc.
+      status:     'pending',
+      resourceId: taskId
+    }));
+
+    // 4) Insertar en bloque y devolver
+    const created = await Notification.insertMany(docs);
+    return res.status(201).json(created);
+
+  } catch (err) {
+    next(err);
   }
 };

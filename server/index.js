@@ -37,6 +37,10 @@ app.use('/api/address', authenticate, addressRoutes);
 const taskRoutes = require('./src/routes/taskRoutes');
 app.use('/api/tasks', authenticate, taskRoutes);
 
+// Rutas de eventos (usuarios autenticados)
+const eventRoutes = require('./src/routes/eventRoutes');
+app.use('/api/events', authenticate, eventRoutes);
+
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("Conectado a MongoDB"))

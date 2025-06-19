@@ -1,53 +1,60 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+// client/src/components/AddressForm.jsx
+import React, { useState } from 'react'
+import axios from 'axios'
+import { useAuth } from '../context/AuthContext'
 
-export default function AddressForm({ onSaved, onCancel }) {
-  const { token } = useAuth();
+export default function AddressForm({
+  onSaved,
+  onCancel,
+  apiEndpoint = '/api/address'   // ← endpoint dinámico (por defecto la dirección de la familia)
+}) {
+  const { token } = useAuth()
+  const apiBase = process.env.REACT_APP_API_URL || ''
 
-  const [street, setStreet]         = useState('');
-  const [number, setNumber]         = useState('');
-  const [block, setBlock]           = useState('');
-  const [staircase, setStaircase]   = useState('');
-  const [floor, setFloor]           = useState('');
-  const [door, setDoor]             = useState('');
-  const [postalCode, setPostalCode] = useState('');
-  const [city, setCity]             = useState('');
-  const [province, setProvince]     = useState('');
-  const [country, setCountry]       = useState('');
-  const [error, setError]           = useState(null);
-  const [loading, setLoading]       = useState(false);
+  const [street, setStreet]         = useState('')
+  const [number, setNumber]         = useState('')
+  const [block, setBlock]           = useState('')
+  const [staircase, setStaircase]   = useState('')
+  const [floor, setFloor]           = useState('')
+  const [door, setDoor]             = useState('')
+  const [postalCode, setPostalCode] = useState('')
+  const [city, setCity]             = useState('')
+  const [province, setProvince]     = useState('')
+  const [country, setCountry]       = useState('')
+  const [error, setError]           = useState(null)
+  const [loading, setLoading]       = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
+  const handleSubmit = async e => {
+    e.preventDefault()
+    setError(null)
 
-    // Validación
+    // Validación básica
     if (!street || !number || !postalCode || !city || !province || !country) {
-      setError('Por favor completa todos los campos obligatorios (*)');
-      return;
+      setError('Por favor completa todos los campos obligatorios (*)')
+      return
     }
 
     const payload = {
       street, number, block, staircase, floor, door,
       postalCode, city, province, country
-    };
+    }
 
     try {
-      setLoading(true);
+      setLoading(true)
+      const headers = { Authorization: `Bearer ${token}` }
       const res = await axios.post(
-        '/api/address',
+        `${apiBase}${apiEndpoint}`,  // ← usa el endpoint que le pases
         payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      onSaved(res.data);
+        { headers }
+      )
+      onSaved(res.data)
     } catch (err) {
-      console.error(err);
-      setError('Error al guardar la dirección');
+      console.error(err)
+      setError('Error al guardar la dirección')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
@@ -172,5 +179,5 @@ export default function AddressForm({ onSaved, onCancel }) {
         )}
       </div>
     </form>
-  );
+)
 }

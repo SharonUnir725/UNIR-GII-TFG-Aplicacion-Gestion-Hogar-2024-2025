@@ -8,6 +8,7 @@ import NavTabs     from '../components/NavTabs';
 import AddressForm from '../components/AddressForm';
 import MembersList from '../components/MembersList';
 import TasksTab from '../components/TasksTab'
+import CalendarView from '../components/CalendarView';
 
 export default function FamilyDashboard() {
   const { token, user, loading } = useAuth();
@@ -115,7 +116,7 @@ export default function FamilyDashboard() {
         {activeTab === 'calendario' && (
           <section>
             <h2 className="text-xl font-semibold mb-4">Calendario Familiar</h2>
-            <p>(Próximamente)</p>
+            <CalendarView />
           </section>
         )}
 

@@ -4,114 +4,180 @@ const Family  = require('../models/family');
 const User    = require('../models/user');
 const axios   = require('axios');
 
+// ————————————————————————————————————————————————
+// Helper privado: geocodifica una dirección con Nominatim
+async function geocodeAddress({ street, number, postalCode, city, province, country }) {
+  // Montar la query legible 
+  let addressStr = `${number} ${street}, ${postalCode} ${city}, ${province}, ${country}`;
+  // Normalizar tildes
+  addressStr = addressStr.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addressStr)}`;
+  const resp = await axios.get(url, {
+    headers: { 
+      // Ajusta tu User-Agent acorde a tus datos
+      'User-Agent': 'TFG-Familia/1.0 (tu_email@dominio)' 
+    }
+  });
+
+  const data = resp.data;
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error('No se pudo geolocalizar la dirección');
+  }
+
+  const { lon, lat } = data[0];
+  return {
+    type: 'Point',
+    coordinates: [ parseFloat(lon), parseFloat(lat) ]
+  };
+}
+// ————————————————————————————————————————————————
+
+
 /**
  * GET /api/address
- * Devuelve la dirección asociada a la familia del usuario autenticado (o null si no existe).
+ * Devuelve la dirección “home” de la familia (o null si no existe).
  */
 exports.getAddressByFamily = async (req, res) => {
   try {
-    // Identificar usuario y su familia guardada en DB
-    const userId = req.user.id;
-    const user = await User.findById(userId).lean();
-    if (!user || !user.familyId) {
+    const user = await User.findById(req.user.id, 'familyId').lean();
+    if (!user?.familyId) {
       return res.status(404).json({ msg: 'No perteneces a ninguna familia' });
     }
-    const familyId = user.familyId;
-
-    // Buscar dirección por familyId
-    const address = await Address.findOne({ familyId }).lean();
+    const address = await Address.findOne({ familyId: user.familyId }).lean();
     return res.json(address || null);
   } catch (err) {
-    console.error('[addressController.getAddressByFamily]', err);
+    console.error('[getAddressByFamily]', err);
     return res.status(500).json({ msg: 'Error al obtener la dirección' });
   }
 };
 
+
 /**
  * POST /api/address
- * Crea o actualiza (upsert) la dirección de la familia del usuario autenticado.
- * Siempre calcula coordenadas usando OpenStreetMap Nominatim y las guarda.
+ * Upsert de la dirección de la familia.
+ * Geocodifica la ubicación con Nominatim.
  */
 exports.upsertAddress = async (req, res) => {
   try {
-    // 1) Identificar usuario y familia
-    const userId = req.user.id;
-    const user   = await User.findById(userId).lean();
-    if (!user || !user.familyId) {
+    const user = await User.findById(req.user.id, 'familyId').lean();
+    if (!user?.familyId) {
       return res.status(404).json({ msg: 'No perteneces a ninguna familia' });
     }
-    const familyId = user.familyId;
 
-    // 2) Verificar permisos: solo el owner
-    const family = await Family.findById(familyId);
+    const family = await Family.findById(user.familyId);
     if (!family) {
       return res.status(404).json({ msg: 'Familia no encontrada' });
     }
-    if (family.owner.toString() !== userId) {
+    if (family.owner.toString() !== req.user.id) {
       return res.status(403).json({ msg: 'Solo el administrador puede editar la dirección' });
     }
 
-    // 3) Extraer y validar campos del body
     const {
-      street,
-      number,
-      postalCode,
-      city,
-      province,
-      country,
-      block     = '',
-      staircase = '',
-      floor     = '',
-      door      = ''
+      street, number, postalCode, city,
+      province, country, block = '', staircase = '',
+      floor = '', door = ''
     } = req.body;
+
     if (!street || !number || !postalCode || !city || !province || !country) {
       return res.status(400).json({ msg: 'Faltan campos obligatorios en la dirección' });
     }
 
-    // 4) Construir y normalizar string para geocoding
-    let addressStr = `${street} ${number}, ${postalCode} ${city}, ${province}, ${country}`;
-    addressStr = addressStr.normalize('NFD').replace(/[̀-ͯ]/g, '');
-
-    // 5) Geocoding con Nominatim
-    const nomUrl =
-      `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addressStr)}`;
-    const geoRes = await axios.get(nomUrl, {
-      headers: { 'User-Agent': 'TFG-Familia/1.0 (sharonursula.delille725@comunidadunir.net)' }
+    // Geocodificar
+    const location = await geocodeAddress({
+      street, number, postalCode, city, province, country
     });
-    if (!Array.isArray(geoRes.data) || !geoRes.data.length) {
-      return res.status(400).json({ msg: 'No se pudo geolocalizar la dirección. Verifica la información.' });
-    }
-    const { lat, lon } = geoRes.data[0];
-    const location = { type: 'Point', coordinates: [parseFloat(lon), parseFloat(lat)] };
 
-    // 6) Datos a guardar
     const data = {
-      street,
-      number,
-      block,
-      staircase,
-      floor,
-      door,
-      postalCode,
-      city,
-      province,
-      country,
+      familyId:   user.familyId,
+      street, number, block, staircase,
+      floor, door, postalCode, city, province, country,
       location
     };
 
-    // 7) Upsert: actualizar si existe, si no crear nuevo
-    let address = await Address.findOne({ familyId });
+    // Upsert manual
+    let address = await Address.findOne({ familyId: user.familyId });
     if (address) {
       Object.assign(address, data);
       await address.save();
       return res.json(address);
     } else {
-      const newAddr = new Address({ familyId, ...data });
-      const saved = await newAddr.save();
+      const newAddr = new Address(data);
+      const saved   = await newAddr.save();
       return res.status(201).json(saved);
     }
+
   } catch (err) {
-    console.error('[addressController.upsertAddress]', err);
-    return res.status(500).json({ msg: 'Error al guardar la dirección', detail: err.message });
+    console.error('[upsertAddress]', err);
+    return res.status(500).json({ msg: err.message || 'Error al guardar la dirección' });
+  }
+};
+
+
+/**
+ * GET /api/address/event
+ * Lista todas las direcciones de la familia (para usarlas en eventos).
+ */
+exports.listEventAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id, 'familyId').lean();
+    if (!user?.familyId) {
+      return res.status(404).json({ msg: 'Usuario sin familia asignada' });
+    }
+    const addrs = await Address.find({ familyId: user.familyId }).lean();
+    return res.json(addrs);
+  } catch (err) {
+    console.error('[listEventAddresses]', err);
+    return res.status(500).json({ msg: 'Error al listar direcciones' });
+  }
+};
+
+
+/**
+ * POST /api/address/event
+ * Crea una nueva dirección de evento si no existe (busca por texto).
+ * Geocodifica usando Nominatim.
+ */
+exports.createEventAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id, 'familyId').lean();
+    if (!user?.familyId) {
+      return res.status(404).json({ msg: 'Usuario sin familia asignada' });
+    }
+
+    const {
+      street, number, postalCode, city,
+      province, country, block = '', staircase = '',
+      floor = '', door = ''
+    } = req.body;
+
+    if (!street || !number || !postalCode || !city || !province || !country) {
+      return res.status(400).json({ msg: 'Faltan campos obligatorios en la dirección' });
+    }
+
+    // Construir datos base
+    const base = {
+      familyId:   user.familyId,
+      street, number, block, staircase,
+      floor, door, postalCode, city, province, country
+    };
+
+    // Intentar encontrar duplicado textual
+    const existing = await Address.findOne(base).lean();
+    if (existing) {
+      return res.json(existing);
+    }
+
+    // Geocodificar ubicación
+    const location = await geocodeAddress({ street, number, postalCode, city, province, country });
+
+    // Crear nueva dirección
+    const addr = new Address({ ...base, location });
+    const saved = await addr.save();
+    return res.status(201).json(saved);
+
+  } catch (err) {
+    console.error('[createEventAddress]', err);
+    return res.status(500).json({ msg: err.message || 'Error al crear dirección de evento' });
   }
 };

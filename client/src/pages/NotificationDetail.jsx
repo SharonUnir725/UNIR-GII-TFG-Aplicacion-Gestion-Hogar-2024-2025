@@ -126,6 +126,75 @@ export default function NotificationDetail() {
           </button>
         </div>
       );
+    
+    case 'new_event':
+      return (
+        <div className="max-w-lg mx-auto p-6 bg-white border rounded shadow">
+          <h2 className="text-xl font-bold mb-4">Nuevo evento</h2>
+          <p><strong>Título:</strong> {notif.payload.title}</p>
+          <p>
+            <strong>Inicio:</strong>{' '}
+            {new Date(notif.payload.startDateTime).toLocaleString()}
+          </p>
+          <p>
+            <strong>Fin:</strong>{' '}
+            {new Date(notif.payload.endDateTime).toLocaleString()}
+          </p>
+          {notif.payload.locatedAt && (
+            <p>
+              <strong>Ubicación:</strong>{' '}
+              {notif.payload.locatedAt.street} {notif.payload.locatedAt.number}, {notif.payload.locatedAt.city}
+            </p>
+          )}
+          {notif.payload.participants?.length > 0 && (
+            <p>
+              <strong>Participantes:</strong>{' '}
+              {notif.payload.participants.map(u => u.firstName).join(', ')}
+            </p>
+          )}
+          <button
+            onClick={() => nav('/dashboard/notifications')}
+            className="mt-6 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          >
+            ← Volver a Notificaciones
+          </button>
+        </div>
+      );
+
+    case 'modified_event':
+      return (
+        <div className="max-w-lg mx-auto p-6 bg-white border rounded shadow">
+          <h2 className="text-xl font-bold mb-4">Evento modificado</h2>
+          <p><strong>Título:</strong> {notif.payload.title}</p>
+          <p>
+            <strong>Inicio:</strong>{' '}
+            {new Date(notif.payload.startDateTime).toLocaleString()}
+          </p>
+          <p>
+            <strong>Fin:</strong>{' '}
+            {new Date(notif.payload.endDateTime).toLocaleString()}
+          </p>
+          {notif.payload.locatedAt && (
+            <p>
+              <strong>Ubicación:</strong>{' '}
+              {notif.payload.locatedAt.street} {notif.payload.locatedAt.number}, {notif.payload.locatedAt.city}
+            </p>
+          )}
+          {notif.payload.participants?.length > 0 && (
+            <p>
+              <strong>Participantes:</strong>{' '}
+              {notif.payload.participants.map(u => u.firstName).join(', ')}
+            </p>
+          )}
+          <button
+            onClick={() => nav('/dashboard/notifications')}
+            className="mt-6 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          >
+            ← Volver a Notificaciones
+          </button>
+        </div>
+      );
+
     default:
       return (
         <div style={{ maxWidth: 600, margin: '2rem auto' }}>

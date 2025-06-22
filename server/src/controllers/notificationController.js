@@ -68,17 +68,18 @@ exports.createNotification = async (req, res, next) => {
     const familyId = userRecord.familyId;
 
     // 2) Extraer datos de la petición
-    const { type, taskId, recipients = [], payload = {} } = req.body;
+    const { type, taskId, eventId, recipients = [], payload = {} } = req.body;
+    const resourceId = taskId || eventId;   
     const recs = Array.isArray(recipients) ? recipients : [recipients];
 
     // 3) Construir un documento por destinatario
     const docs = recs.map(userId => ({
       family:     familyId,
       recipient:  userId,
-      type,                   // debe ser 'new_task' o 'modified_task'
-      payload,                // el objeto con title, description, dueDate, etc.
-      status:     'pending',
-      resourceId: taskId
+      type,
+      payload,
+      resourceId,
+      status:     'pending'
     }));
 
     // 4) Insertar en bloque y devolver

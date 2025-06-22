@@ -1,8 +1,6 @@
-// client/src/pages/Notifications.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Notifications() {
   const [notifs, setNotifs] = useState([]);
@@ -10,7 +8,6 @@ export default function Notifications() {
   const [error, setError] = useState('');
   const nav = useNavigate();
 
-  // 1) Cargar todas las notificaciones (pendientes + leídas)
   useEffect(() => {
     (async () => {
       try {
@@ -43,31 +40,34 @@ export default function Notifications() {
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {notifs.map(n => {
-            // Determinar título según tipo de notificación
             let title;
             switch (n.type) {
               case 'join_request':
                 title = 'Solicitud de unión';
                 break;
               case 'join_approved':
-                title = 'Solicitud de asociación aprobada';
+                title = 'Solicitud aprobada';
                 break;
               case 'join_rejected':
-                title = 'Solicitud de asociación denegada';
+                title = 'Solicitud denegada';
                 break;
               case 'new_task':
-                title = 'Te han asignado una nueva tarea.';
+                title = 'Nueva tarea asignada';
                 break;
               case 'modified_task':
-                title = 'Una tarea ha sido modificada.'
-                break
+                title = 'Tarea modificada';
+                break;
               case 'new_event':
-                title = 'Un nuevo evento';
+                title = 'Nuevo evento';
+                break;
+              case 'modified_event':
+                title = 'Evento modificado';
                 break;
               default:
                 title = 'Notificación';
             }
             const isNew = n.status === 'pending';
+            const receivedAt = new Date(n.createdAt).toLocaleString();
 
             return (
               <li
@@ -83,9 +83,27 @@ export default function Notifications() {
                   to={`/dashboard/notifications/${n._id}`}
                   style={{ textDecoration: 'none', color: '#000' }}
                 >
-                  <strong>{title}</strong>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <strong>{title}</strong>
+                    <span style={{
+                      fontSize: '0.85em',
+                      color: '#666'
+                    }}>
+                      {receivedAt}
+                    </span>
+                  </div>
                   {isNew && (
-                    <span style={{ color: 'red', marginLeft: '0.5rem' }}>• NUEVO</span>
+                    <span style={{
+                      color: 'red',
+                      marginLeft: '0.5rem',
+                      fontSize: '0.9em'
+                    }}>
+                      • NUEVO
+                    </span>
                   )}
                 </Link>
               </li>
@@ -94,7 +112,10 @@ export default function Notifications() {
         </ul>
       )}
 
-      <button onClick={() => nav('/dashboard')} style={{ marginTop: '2rem' }}>
+      <button
+        onClick={() => nav('/dashboard')}
+        style={{ marginTop: '2rem' }}
+      >
         ← Volver al Dashboard
       </button>
     </div>

@@ -1,137 +1,170 @@
 // server/src/controllers/eventController.js
-const Event = require('../models/event');
-const User  = require('../models/user');
+const Event  = require('../models/event');
+const User   = require('../models/user');
 
 /**
- * 1) Listar eventos de la familia
  * GET /api/events
+ * Listar todos los eventos de la familia, sin nulls en participantes
  */
 exports.getAllEvents = async (req, res, next) => {
   try {
-    // Recuperar familyId real del usuario
-    const userRecord = await User.findById(req.user.id, 'familyId');
-    if (!userRecord || !userRecord.familyId) {
+    // 1) Obtener familyId del usuario
+    const user = await User.findById(req.user.id, 'familyId');
+    if (!user?.familyId) {
       return res.status(400).json({ msg: 'Usuario sin familia asignada' });
     }
-    const familyId = userRecord.familyId;
 
-    // Buscar eventos de la familia y poblar campos
-    const events = await Event.find({ familyId })
+    // 2) Buscar y poblar
+    let events = await Event.find({ familyId: user.familyId })
       .populate('locatedAt')
       .populate('participants', 'firstName lastName1')
       .exec();
 
-    res.json(events);
+    // 3) Eliminar posibles null en participants
+    events = events.map(ev => {
+      ev.participants = (ev.participants || []).filter(u => !!u);
+      return ev;
+    });
+
+    return res.json(events);
   } catch (err) {
     next(err);
   }
 };
 
 /**
- * 2) Crear un nuevo evento
+ * GET /api/events/:id
+ * Obtener un evento por ID, sin nulls en participantes
+ */
+exports.getEventById = async (req, res, next) => {
+  try {
+    // 1) Obtener familyId del usuario
+    const user = await User.findById(req.user.id, 'familyId');
+    if (!user?.familyId) {
+      return res.status(400).json({ msg: 'Usuario sin familia asignada' });
+    }
+
+    // 2) Buscar evento y poblar
+    const ev = await Event.findOne({ _id: req.params.id, familyId: user.familyId })
+      .populate('locatedAt')
+      .populate('participants', 'firstName lastName1')
+      .exec();
+
+    if (!ev) {
+      return res.status(404).json({ msg: 'Evento no encontrado' });
+    }
+
+    // 3) Filtrar nulls
+    ev.participants = (ev.participants || []).filter(u => !!u);
+
+    return res.json(ev);
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * POST /api/events
+ * Crear un nuevo evento y poblar participantes
  */
 exports.createEvent = async (req, res, next) => {
   try {
-    const { title, startDateTime, endDateTime, locatedAt, participants } = req.body;
-    const userRecord = await User.findById(req.user.id, 'familyId');
-    if (!userRecord || !userRecord.familyId) {
+    // 1) familyId
+    const user = await User.findById(req.user.id, 'familyId');
+    if (!user?.familyId) {
       return res.status(400).json({ msg: 'Usuario sin familia asignada' });
     }
-    const familyId  = userRecord.familyId;
+    const familyId  = user.familyId;
     const createdBy = req.user.id;
 
-    const event = new Event({
+    // 2) Limpiar y asignar participantes
+    const { title, startDateTime, endDateTime, locatedAt, participants = [] } = req.body;
+    const cleanParts = Array.isArray(participants)
+      ? participants.filter(id => id)
+      : [];
+
+    // 3) Guardar
+    const ev = new Event({
       title,
       startDateTime,
       endDateTime,
       locatedAt,
-      participants,
+      participants: cleanParts,
       createdBy,
       familyId
     });
-    const saved = await event.save();
-    res.status(201).json(saved);
+    const saved = await ev.save();
+
+    // 4) Poblar antes de responder
+    await saved.populate('locatedAt');
+    await saved.populate('participants', 'firstName lastName1');
+    saved.participants = saved.participants.filter(u => !!u);
+
+    return res.status(201).json(saved);
   } catch (err) {
     next(err);
   }
 };
 
 /**
- * 3) Obtener un evento por ID
- * GET /api/events/:id
- */
-exports.getEventById = async (req, res, next) => {
-  try {
-    const userRecord = await User.findById(req.user.id, 'familyId');
-    if (!userRecord || !userRecord.familyId) {
-      return res.status(400).json({ msg: 'Usuario sin familia asignada' });
-    }
-    const familyId = userRecord.familyId;
-
-    const ev = await Event.findOne({ _id: req.params.id, familyId })
-      .populate('locatedAt')
-      .populate('participants', 'firstName lastName1')
-      .exec();
-    if (!ev) {
-      return res.status(404).json({ message: 'Evento no encontrado' });
-    }
-    res.json(ev);
-  } catch (err) {
-    next(err);
-  }
-};
-
-/**
- * 4) Actualizar evento
  * PUT /api/events/:id
+ * Actualizar un evento y poblar participantes
  */
 exports.updateEvent = async (req, res, next) => {
   try {
-    const userRecord = await User.findById(req.user.id, 'familyId');
-    if (!userRecord || !userRecord.familyId) {
+    // 1) familyId
+    const user = await User.findById(req.user.id, 'familyId');
+    if (!user?.familyId) {
       return res.status(400).json({ msg: 'Usuario sin familia asignada' });
     }
-    const familyId = userRecord.familyId;
+    const familyId = user.familyId;
 
-    const update = {
-      title:         req.body.title,
-      startDateTime: req.body.startDateTime,
-      endDateTime:   req.body.endDateTime,
-      locatedAt:     req.body.locatedAt,
-      participants:  req.body.participants
-    };
-    const ev = await Event.findOneAndUpdate(
+    // 2) Limpiar participantes
+    const { title, startDateTime, endDateTime, locatedAt, participants = [] } = req.body;
+    const cleanParts = Array.isArray(participants)
+      ? participants.filter(id => id)
+      : [];
+
+    // 3) Actualizar y poblar
+    const updated = await Event.findOneAndUpdate(
       { _id: req.params.id, familyId },
-      update,
-      { new: true }
-    ).exec();
-    if (!ev) {
-      return res.status(404).json({ message: 'Evento no encontrado' });
+      { title, startDateTime, endDateTime, locatedAt, participants: cleanParts },
+      { new: true, runValidators: true }
+    )
+      .populate('locatedAt')
+      .populate('participants', 'firstName lastName1')
+      .exec();
+
+    if (!updated) {
+      return res.status(404).json({ msg: 'Evento no encontrado' });
     }
-    res.json(ev);
+
+    updated.participants = updated.participants.filter(u => !!u);
+
+    return res.json(updated);
   } catch (err) {
     next(err);
   }
 };
 
 /**
- * 5) Eliminar evento
  * DELETE /api/events/:id
+ * Eliminar un evento
  */
 exports.deleteEvent = async (req, res, next) => {
   try {
-    const userRecord = await User.findById(req.user.id, 'familyId');
-    if (!userRecord || !userRecord.familyId) {
+    const user = await User.findById(req.user.id, 'familyId');
+    if (!user?.familyId) {
       return res.status(400).json({ msg: 'Usuario sin familia asignada' });
     }
-    const familyId = userRecord.familyId;
+    const familyId = user.familyId;
 
-    const ev = await Event.findOneAndDelete({ _id: req.params.id, familyId }).exec();
-    if (!ev) {
-      return res.status(404).json({ message: 'Evento no encontrado' });
+    const result = await Event.deleteOne({ _id: req.params.id, familyId });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ msg: 'Evento no encontrado' });
     }
-    res.json({ message: 'Evento eliminado' });
+
+    return res.status(204).end();
   } catch (err) {
     next(err);
   }

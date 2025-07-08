@@ -1,6 +1,4 @@
 // client/src/components/NavTabs.jsx
-import React from 'react';
-
 export default function NavTabs({ activeTab, setActiveTab }) {
   const tabs = [
     { id: 'direccion',  label: 'Dirección' },

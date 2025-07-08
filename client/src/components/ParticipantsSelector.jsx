@@ -1,6 +1,4 @@
 // client/src/components/ParticipantsSelector.jsx
-import React from 'react'
-
 export default function ParticipantsSelector({ members = [], selected = [], onChange }) {
   const toggle = id => {
     if (!onChange) return

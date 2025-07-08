@@ -1,5 +1,4 @@
-import React from 'react';
-
+// client/src/components/AddressSelector.jsx
 export default function AddressSelector({ addresses = [], value, onChange, onAddNew }) {
   return (
     <div className="mb-4">

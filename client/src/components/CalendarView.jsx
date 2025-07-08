@@ -1,5 +1,5 @@
 // client/src/components/CalendarView.jsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { parse, startOfWeek, getDay, format } from 'date-fns';
 import es from 'date-fns/locale/es';

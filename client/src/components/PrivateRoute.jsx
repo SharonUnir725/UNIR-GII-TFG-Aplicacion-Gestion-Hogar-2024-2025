@@ -1,7 +1,5 @@
 // client/src/components/PrivateRoute.jsx
 // Cerrar el acceso a las páginas de tu dashboard a quien no tenga un token en el localStorage
-
-import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 

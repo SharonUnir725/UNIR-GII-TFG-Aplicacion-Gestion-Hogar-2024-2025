@@ -63,6 +63,9 @@ export default function Notifications() {
               case 'modified_event':
                 title = 'Evento modificado';
                 break;
+              case 'task_completed':
+                title = 'Tarea completada';
+                break;
               default:
                 title = 'Notificación';
             }

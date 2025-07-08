@@ -29,6 +29,11 @@ export default function EventDetail({ event, onClose, onEdit }) {
               <strong>Participantes:</strong> {event.participants.map(u => u.firstName).join(', ')}
             </p>
           )}
+          {event.description && (
+            <p>
+              <strong>Descripción:</strong> {event.description}
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end mt-6 space-x-2">

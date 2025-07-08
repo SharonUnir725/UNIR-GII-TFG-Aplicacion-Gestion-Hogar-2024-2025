@@ -3,86 +3,82 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import AddressForm from './AddressForm';
+import AddressSelector from './AddressSelector';
+import ParticipantsSelector from './ParticipantsSelector';
+import { notify } from '../utils/notify';
 
 export default function EventForm({
   slot,
-  event,         // objeto existente para edición (o undefined al crear)
+  event,
   onCancel,
-  onCreated,     // callback tras POST
-  onUpdated      // callback tras PUT
+  onCreated,
+  onUpdated
 }) {
   const { token, user } = useAuth();
   const apiBase = process.env.REACT_APP_API_URL || '';
 
-  // Campos del formulario
-  const [title, setTitle]                   = useState('');
-  const [addressId, setAddressId]           = useState('');
-  const [eventAddresses, setEventAddresses] = useState([]);
-  const [participants, setParticipants]     = useState([]);
-  const [selectedParticipants, setSelectedParticipants] = useState([]);
-  const [startDateTime, setStartDateTime]   = useState('');
-  const [endDateTime, setEndDateTime]       = useState('');
-  const [error, setError]                   = useState('');
+  const [title, setTitle] = useState('');
+  const [addressId, setAddressId] = useState('');
+  const [addresses, setAddresses] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [startDateTime, setStartDateTime] = useState('');
+  const [endDateTime, setEndDateTime] = useState('');
+  const [error, setError] = useState('');
   const [showAddressForm, setShowAddressForm] = useState(false);
 
   const isEdit = Boolean(event);
 
-  // Helper: formatea Date → "YYYY-MM-DDThh:mm"
   const toInputDateTime = dt => {
     const d = new Date(dt);
-    const pad = n => n.toString().padStart(2,'0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const pad = n => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
-  // 1) Prefill: si editamos, usa `event`; si no, usa `slot`
   useEffect(() => {
     if (isEdit) {
       setTitle(event.title || '');
-      setAddressId(event.locatedAt? event.locatedAt._id : '');
-      setSelectedParticipants(event.participants?.map(u => u._id) || []);
+      setAddressId(event.locatedAt && typeof event.locatedAt === 'object'
+        ? event.locatedAt._id
+        : event.locatedAt || '');
+      setSelectedMembers(
+        Array.isArray(event.participants)
+          ? event.participants.map(u => u._id || u)
+          :  []
+      );
       setStartDateTime(toInputDateTime(event.startDateTime));
       setEndDateTime(toInputDateTime(event.endDateTime));
     } else if (slot) {
       setTitle('');
       setAddressId('');
-      setSelectedParticipants([]);
-      setStartDateTime(toInputDateTime(slot.start));
-      setEndDateTime(toInputDateTime(slot.end));
+      setSelectedMembers([]);
+      const start = new Date(slot.start);
+      const sameDayEnd = new Date(start);
+      sameDayEnd.setHours(start.getHours() + 1);
+      setStartDateTime(toInputDateTime(start));
+      setEndDateTime(toInputDateTime(sameDayEnd));
     }
   }, [isEdit, event, slot]);
 
-  // 2) Carga direcciones y miembros
   useEffect(() => {
     const headers = { Authorization: `Bearer ${token}` };
-    // direcciones de evento
     axios.get(`${apiBase}/api/address/event`, { headers })
-      .then(res => setEventAddresses(res.data))
+      .then(res => setAddresses(res.data))
       .catch(() => {});
-    // miembros de la familia
     axios.get(`${apiBase}/api/users?familyId=${user.familyId}`, { headers })
-      .then(res => setParticipants(res.data))
+      .then(res => setMembers(res.data))
       .catch(() => {});
   }, [token, apiBase, user.familyId]);
 
-  const toggleParticipant = id => {
-    setSelectedParticipants(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
-  };
-
-  // 3) Tras guardar una nueva dirección
   const handleAddressSaved = newAddr => {
     const headers = { Authorization: `Bearer ${token}` };
-    // recargar direcciones
     axios.get(`${apiBase}/api/address/event`, { headers })
-      .then(res => setEventAddresses(res.data))
+      .then(res => setAddresses(res.data))
       .catch(() => {});
-    // seleccionar la creada
     setAddressId(newAddr._id);
     setShowAddressForm(false);
   };
 
-  // 4) Envío del formulario (POST o PUT)
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
@@ -91,61 +87,29 @@ export default function EventForm({
       const body = {
         title,
         startDateTime: new Date(startDateTime),
-        endDateTime:   new Date(endDateTime),
-        locatedAt:     addressId,
-        participants:  selectedParticipants
+        endDateTime: new Date(endDateTime),
+        locatedAt: addressId,
+        participants: selectedMembers
       };
       let res;
       if (isEdit) {
-        // PUT /api/events/:id
-        res = await axios.put(
-          `${apiBase}/api/events/${event._id}`,
-          body,
-          { headers }
-        );
+        res = await axios.put(`${apiBase}/api/events/${event._id}`, body, { headers });
         onUpdated && onUpdated(res.data);
-        // notificación de evento modificado
-        await axios.post(
-          `${apiBase}/api/notifications`,
-          {
-            type: 'modified_event',
-            eventId: res.data._id,
-            recipients: selectedParticipants,
-            payload: {
-              title: res.data.title,
-              startDateTime: res.data.startDateTime,
-              endDateTime: res.data.endDateTime,
-              locatedAt: res.data.locatedAt,
-              participants: res.data.participants
-            }
-          },
-          { headers }
-        );
+        await notify({
+          type: 'modified_event',
+          eventId: res.data._id,
+          recipients: selectedMembers,
+          payload: res.data
+        });
       } else {
-        // POST /api/events
-        res = await axios.post(
-          `${apiBase}/api/events`,
-          body,
-          { headers }
-        );
+        res = await axios.post(`${apiBase}/api/events`, body, { headers });
         onCreated && onCreated(res.data);
-        // notificación de nuevo evento
-        await axios.post(
-          `${apiBase}/api/notifications`,
-          {
-            type: 'new_event',
-            eventId: res.data._id,
-            recipients: selectedParticipants,
-            payload: {
-              title: res.data.title,
-              startDateTime: res.data.startDateTime,
-              endDateTime: res.data.endDateTime,
-              locatedAt: res.data.locatedAt,
-              participants: res.data.participants
-            }
-          },
-          { headers }
-        );
+        await notify({
+          type: 'new_event',
+          eventId: res.data._id,
+          recipients: selectedMembers,
+          payload: res.data
+        });
       }
     } catch (err) {
       setError(
@@ -155,14 +119,11 @@ export default function EventForm({
     }
   };
 
-  // 5) Si estamos añadiendo dirección, renderizar AddressForm
   if (showAddressForm) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
         <div className="bg-white p-6 rounded shadow max-w-md w-full">
-          <h3 className="text-xl font-semibold mb-4">
-            Añadir dirección de evento
-          </h3>
+          <h3 className="text-xl font-semibold mb-4">Añadir dirección de evento</h3>
           <AddressForm
             apiEndpoint="/api/address/event"
             onSaved={handleAddressSaved}
@@ -173,7 +134,6 @@ export default function EventForm({
     );
   }
 
-  // 6) Formulario principal
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <form
@@ -185,7 +145,6 @@ export default function EventForm({
         </h3>
         {error && <p className="text-red-600 mb-2">{error}</p>}
 
-        {/* Título */}
         <div className="mb-3">
           <label className="block font-medium mb-1">Título</label>
           <input
@@ -198,51 +157,20 @@ export default function EventForm({
         </div>
 
         {/* Ubicación */}
-        <div className="mb-3">
-          <label className="block font-medium mb-1">Ubicación</label>
-          <div className="flex space-x-2">
-            <select
-              value={addressId}
-              onChange={e => setAddressId(e.target.value)}
-              required
-              className="flex-1 border p-2 rounded"
-            >
-              <option value="">-- Selecciona dirección --</option>
-              {eventAddresses.map(addr => (
-                <option key={addr._id} value={addr._id}>
-                  {addr.street} {addr.number}, {addr.city}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setShowAddressForm(true)}
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-            >
-              Añadir dirección
-            </button>
-          </div>
-        </div>
+        <AddressSelector
+          addresses={addresses}
+          value={addressId}
+          onChange={setAddressId}
+          onAddNew={() => setShowAddressForm(true)}
+        />
 
         {/* Participantes */}
-        <div className="mb-3">
-          <label className="block font-medium mb-1">Participantes</label>
-          <div className="grid grid-cols-2 gap-2 max-h-40 overflow-auto">
-            {participants.map(u => (
-              <label key={u._id} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectedParticipants.includes(u._id)}
-                  onChange={() => toggleParticipant(u._id)}
-                  className="mr-2"
-                />
-                {u.firstName}
-              </label>
-            ))}
-          </div>
-        </div>
+        <ParticipantsSelector
+          members={members}
+          selected={selectedMembers}
+          onChange={setSelectedMembers}
+        />
 
-        {/* Inicio */}
         <div className="mb-3">
           <label className="block font-medium mb-1">Inicio</label>
           <input
@@ -254,7 +182,6 @@ export default function EventForm({
           />
         </div>
 
-        {/* Fin */}
         <div className="mb-4">
           <label className="block font-medium mb-1">Fin</label>
           <input
@@ -266,7 +193,6 @@ export default function EventForm({
           />
         </div>
 
-        {/* Acciones */}
         <div className="flex justify-end space-x-2">
           <button
             type="button"

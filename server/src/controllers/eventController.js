@@ -4,7 +4,7 @@ const User   = require('../models/user');
 
 /**
  * GET /api/events
- * Listar todos los eventos de la familia, sin nulls en participantes
+ * Listar todos los eventos de la familia
  */
 exports.getAllEvents = async (req, res, next) => {
   try {
@@ -34,7 +34,7 @@ exports.getAllEvents = async (req, res, next) => {
 
 /**
  * GET /api/events/:id
- * Obtener un evento por ID, sin nulls en participantes
+ * Obtener un evento por ID
  */
 exports.getEventById = async (req, res, next) => {
   try {
@@ -78,7 +78,7 @@ exports.createEvent = async (req, res, next) => {
     const createdBy = req.user.id;
 
     // 2) Limpiar y asignar participantes
-    const { title, startDateTime, endDateTime, locatedAt, participants = [] } = req.body;
+    const { title, startDateTime, endDateTime, locatedAt, participants = [], description } = req.body;
     const cleanParts = Array.isArray(participants)
       ? participants.filter(id => id)
       : [];
@@ -90,6 +90,7 @@ exports.createEvent = async (req, res, next) => {
       endDateTime,
       locatedAt,
       participants: cleanParts,
+      description,
       createdBy,
       familyId
     });
@@ -120,7 +121,7 @@ exports.updateEvent = async (req, res, next) => {
     const familyId = user.familyId;
 
     // 2) Limpiar participantes
-    const { title, startDateTime, endDateTime, locatedAt, participants = [] } = req.body;
+    const { title, startDateTime, endDateTime, locatedAt, participants = [], description } = req.body;
     const cleanParts = Array.isArray(participants)
       ? participants.filter(id => id)
       : [];
@@ -128,7 +129,7 @@ exports.updateEvent = async (req, res, next) => {
     // 3) Actualizar y poblar
     const updated = await Event.findOneAndUpdate(
       { _id: req.params.id, familyId },
-      { title, startDateTime, endDateTime, locatedAt, participants: cleanParts },
+      { title, startDateTime, endDateTime, locatedAt, participants: cleanParts, description },
       { new: true, runValidators: true }
     )
       .populate('locatedAt')

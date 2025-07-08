@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import NavTabs     from '../components/NavTabs';
 import AddressForm from '../components/AddressForm';
 import MembersList from '../components/MembersList';
-import TasksTab from '../components/TasksTab'
+import TasksList from '../components/TasksList'
 import CalendarView from '../components/CalendarView';
 
 export default function FamilyDashboard() {
@@ -123,7 +123,7 @@ export default function FamilyDashboard() {
         {activeTab === 'tareas' && (
           <section>
             <h2 className="text-xl font-semibold mb-4">Lista de Tareas</h2>
-            <TasksTab />
+            <TasksList />
           </section>
         )}
       </main>

@@ -40,6 +40,7 @@ export function AuthProvider({ children }) {
   // 3) login(token): guarda y dispara recarga de perfil
   const login = newToken => {
     localStorage.setItem('token', newToken);
+    console.log('🔐 Token guardado en localStorage:', localStorage.getItem('token'))
     setToken(newToken);
   };
 

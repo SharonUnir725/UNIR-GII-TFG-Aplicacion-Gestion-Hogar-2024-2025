@@ -195,6 +195,20 @@ export default function NotificationDetail() {
         </div>
       );
 
+          case 'task_completed':
+      return (
+        <div className="max-w-lg mx-auto p-6 bg-white border rounded shadow">
+          <h2 className="text-xl font-bold mb-4">Tarea completada</h2>
+          <p>{notif.payload.message}</p>
+          <button
+            onClick={() => nav('/dashboard/notifications')}
+            className="mt-6 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          >
+            ← Volver a Notificaciones
+          </button>
+        </div>
+      );
+
     default:
       return (
         <div style={{ maxWidth: 600, margin: '2rem auto' }}>

@@ -39,6 +39,13 @@ const EventSchema = new Schema({
     }
   ],
 
+  // Descripción del evento
+  description: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+
   // Usuario que creó el evento
   createdBy: {
     type: Schema.Types.ObjectId,

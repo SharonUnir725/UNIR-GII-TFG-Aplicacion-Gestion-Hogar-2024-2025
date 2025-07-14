@@ -9,13 +9,20 @@ import FamilyDashboard     from '../pages/FamilyDashboard';
 import CreateFamily        from '../pages/CreateFamily';
 import JoinFamily          from '../pages/JoinFamily';
 import Notifications       from '../pages/Notifications';
-import NotificationDetail  from '../pages/NotificationDetail'; // ← Importamos el detalle
+import NotificationDetail  from '../pages/NotificationDetail'; 
+import ForgotPassword      from '../pages/ForgotPassword';
+import ResetPassword       from '../pages/ResetPassword'
+import VerifyEmail         from '../pages/VerifyEmail';
+
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login"    element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
       <Route
         path="/dashboard"

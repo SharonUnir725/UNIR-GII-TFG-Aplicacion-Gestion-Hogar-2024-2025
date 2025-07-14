@@ -1,7 +1,9 @@
 // src/controllers/authController.js
 const bcrypt = require('bcrypt');
-const jwt    = require('jsonwebtoken');
-const User   = require('../models/user');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
+const mailer = require('../utils/mailer');
+const { generateToken, tokenExpiresIn } = require('../utils/token');
 
 //**Registrar un usuario nuevo
 // POST /api/auth/register
@@ -10,70 +12,125 @@ exports.register = async (req, res) => {
     const { firstName, lastName1, lastName2, email, password, role } = req.body;
 
     // 1) Comprobar que no exista un usuario con ese email
-    const existe = await User.findOne({ email });
-    if (existe) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({ error: 'Ya existe un usuario con ese correo' });
     }
 
     // 2) Encriptar la contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 3) Crear el nuevo usuario
-    const nuevoUsuario = await User.create({
+    // 3) Generar token de verificación de correo
+    const emailVerificationToken = generateToken();
+    const emailVerificationExpires = tokenExpiresIn(24); // 24 horas
+
+    // 4) Crear usuario
+    const newUser = await User.create({
       firstName,
       lastName1,
       lastName2,
       email,
       passwordHash,
-      role
+      role,
+      emailVerificationToken,
+      emailVerificationExpires,
+      emailVerified: false
     });
 
-    // 4) Devolver respuesta de éxito
+    // 5) Enviar correo con enlace de verificación
+    const verifyUrl = `http://localhost:3000/verify-email/${emailVerificationToken}`;
+    await mailer.sendMail({
+      to: email,
+      subject: 'Verifica tu cuenta',
+      text: `Haz clic en el siguiente enlace para verificar tu cuenta: ${verifyUrl}`
+    });
+
+    // 6) Respuesta
     res.status(201).json({
       mensaje: 'Usuario registrado correctamente',
-      usuarioId: nuevoUsuario._id
+      usuarioId: newUser._id
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
 
-//**Autenticar de un usuario registrado
+//**Verificar correo electrónico
+// GET /api/auth/verify-email/:token
+exports.verifyEmail = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const user = await User.findOne({ emailVerificationToken: token });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Token inválido' });
+    }
+
+    if (user.emailVerified) {
+      return res.status(200).json({ message: 'Email ya estaba verificado' });
+    }
+
+    if (user.emailVerificationExpires < Date.now()) {
+      return res.status(400).json({ message: 'Token expirado' });
+    }
+
+    user.emailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({ message: 'Email verificado correctamente' });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
+};
+
+//**Autenticar un usuario registrado
 // POST /api/auth/login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1) Buscar usuario por email
-    const usuario = await User.findOne({ email });
-    if (!usuario) {
+    // 1) Buscar usuario
+    const user = await User.findOne({ email });
+    if (!user) {
       return res.status(401).json({ error: 'Correo o contraseña no válidos' });
     }
 
-    // 2) Verificar la contraseña
-    const esValida = await bcrypt.compare(password, usuario.passwordHash);
-    if (!esValida) {
+    // 2) Verificar contraseña
+    const validPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!validPassword) {
       return res.status(401).json({ error: 'Correo o contraseña no válidos' });
     }
 
-    // 3) Generar token JWT
-    const payload = { id: usuario._id, email: usuario.email };
-    const token   = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
+    // 3) Verificar si el correo fue confirmado
+    if (!user.emailVerified) {
+      return res.status(403).json({ message: 'Debes verificar tu correo electrónico antes de iniciar sesión.' });
+    }
 
-    // 4) Devolver token y datos básicos del usuario
+    // 4) Generar token JWT
+    const payload = { id: user._id, email: user.email };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
+
+    // 5) Responder con token y datos básicos del usuario
     res.json({
       mensaje: 'Inicio de sesión correcto',
       token,
       usuario: {
-        usuarioId:  usuario._id,
-        firstName:  usuario.firstName,
-        lastName1:  usuario.lastName1,
-        lastName2:  usuario.lastName2,
-        email:      usuario.email,
-        role:       usuario.role
+        usuarioId: user._id,
+        firstName: user.firstName,
+        lastName1: user.lastName1,
+        lastName2: user.lastName2,
+        email: user.email,
+        role: user.role
       }
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -84,13 +141,15 @@ exports.login = async (req, res) => {
 // GET /api/auth/me
 exports.getMe = async (req, res) => {
   try {
-    const usuario = await User.findById(req.user.id)
+    const user = await User.findById(req.user.id)
       .select('firstName lastName1 lastName2 email role familyId')
       .lean();
-    if (!usuario) {
+
+    if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
-    res.json(usuario);
+
+    res.json(user);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error interno del servidor' });

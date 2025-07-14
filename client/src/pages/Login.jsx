@@ -30,7 +30,13 @@ export default function Login() {
       // Guarda el token en el contexto (actualiza estado y dispara recarga de perfil)
       login(res.data.token);
     } catch (err) {
-      setError(err.response?.data?.error || 'Login sin éxito');
+      if (err.response && err.response.status === 403) {
+      setError('Debes verificar tu correo electrónico antes de iniciar sesión.');
+      } else if (err.response && err.response.status === 401) {
+      setError('Correo o contraseña incorrectos.');
+      } else {
+      setError('Error al intentar iniciar sesión.');
+      }
     }
   };
 
@@ -64,6 +70,10 @@ export default function Login() {
       </form>
       <p className="mt-4 text-center">
         Nuevo? <Link to="/register" className="text-blue-600 hover:underline">Regístrate aquí</Link>
+      </p>
+      <p className="text-sm mt-2">
+        <Link to="/forgot-password" className="text-blue-600 hover:underline">¿Olvidaste tu contraseña?
+        </Link>
       </p>
     </div>
   );

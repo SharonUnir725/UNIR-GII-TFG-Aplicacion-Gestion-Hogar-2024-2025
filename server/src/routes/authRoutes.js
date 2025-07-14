@@ -1,11 +1,8 @@
 // src/routes/authRoutes.js
 const { Router } = require('express');
 const auth       = require('../middleware/auth');
-const {
-  register,
-  login,
-  getMe
-} = require('../controllers/authController');
+const authController = require('../controllers/authController');
+const { register, login, getMe } = authController;
 
 const router = Router();
 
@@ -20,5 +17,8 @@ router.post('/login', login);
 // Obtener datos del usuario autenticado
 // GET /api/auth/me
 router.get('/me', auth, getMe);
+
+// Verificar correo
+router.get('/verify-email/:token', authController.verifyEmail);
 
 module.exports = router;

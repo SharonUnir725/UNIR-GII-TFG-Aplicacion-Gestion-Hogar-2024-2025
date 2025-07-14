@@ -43,7 +43,20 @@ const UserSchema = new Schema({
   familyId: {
     type: Types.ObjectId,
     ref: 'Family'
-  }
+  },
+
+  // Campos para recuperación de contraseña
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
+  
+  // Campos para verificación correo electrónico
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: String,
+  emailVerificationExpires: Date,
+
 }, {
   timestamps: true
 });

@@ -127,9 +127,14 @@ export default function FamilyDashboard() {
           </section>
         )}
       </main>
-      <button onClick={() => nav('/dashboard')} style={{ marginTop: '2rem' }}>
-        ← Volver al Dashboard
-      </button>
+      <div className="mt-6">
+        <button
+          onClick={() => nav('/dashboard')}
+          className="inline-block px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded hover:bg-gray-700"
+          >
+          ← Volver al Dashboard
+        </button>
+      </div>
     </div>
   );
 }

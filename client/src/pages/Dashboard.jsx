@@ -82,16 +82,26 @@ export default function Dashboard() {
           >
             Logout
           </button>
-        </div>
 
-        {/* Botón “Ver Mi Familia” si existe familyId */}
-        {user.familyId && (
-          <Link to="/family">
-            <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700">
-              Ver Mi Familia
+          {/* Botón Ver / Editar Perfil */}
+          <Link to="/profile">
+            <button className="px-4 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700">
+              Ver / Editar mi Perfil
             </button>
           </Link>
-        )}
+
+          {/* Botón “Ver Mi Familia” si existe familyId */}
+          {user.familyId && (
+            <Link to="/family">
+              <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700">
+                Ver Mi Familia
+              </button>
+            </Link>
+          )}
+
+
+
+        </div>
       </div>
     </div>
   );

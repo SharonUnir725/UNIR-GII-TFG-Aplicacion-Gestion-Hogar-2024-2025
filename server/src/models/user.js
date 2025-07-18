@@ -44,6 +44,20 @@ const UserSchema = new Schema({
     type: Types.ObjectId,
     ref: 'Family'
   },
+  profileImage: {
+    type: String // URL o ruta de la imagen
+  },
+  phone: {
+    type: String,
+    trim: true
+  },
+  birthDate: {
+    type: Date
+  },
+  gender: {
+    type: String,
+    enum: ['masculino', 'femenino', 'otro']
+  },
 
   // Campos para recuperación de contraseña
   resetPasswordToken: String,

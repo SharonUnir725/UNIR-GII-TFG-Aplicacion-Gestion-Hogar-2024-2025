@@ -13,6 +13,7 @@ import NotificationDetail  from '../pages/NotificationDetail';
 import ForgotPassword      from '../pages/ForgotPassword';
 import ResetPassword       from '../pages/ResetPassword'
 import VerifyEmail         from '../pages/VerifyEmail';
+import ProfilePage         from '../pages/ProfilePage';
 
 
 export default function AppRoutes() {
@@ -76,6 +77,16 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <NotificationDetail />
+          </PrivateRoute>
+        }
+      />
+
+      {/* La página de perfil del usuario autenticado */}
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <ProfilePage />
           </PrivateRoute>
         }
       />

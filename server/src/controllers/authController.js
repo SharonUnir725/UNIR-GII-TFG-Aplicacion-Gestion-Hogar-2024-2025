@@ -117,18 +117,10 @@ exports.login = async (req, res) => {
     const payload = { id: user._id, email: user.email };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
 
-    // 5) Responder con token y datos básicos del usuario
+    // 5) Responder con token
     res.json({
       mensaje: 'Inicio de sesión correcto',
       token,
-      usuario: {
-        usuarioId: user._id,
-        firstName: user.firstName,
-        lastName1: user.lastName1,
-        lastName2: user.lastName2,
-        email: user.email,
-        role: user.role
-      }
     });
 
   } catch (err) {
@@ -142,7 +134,9 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .select('firstName lastName1 lastName2 email role familyId')
+      .select(
+        'firstName lastName1 lastName2 email role familyId phone birthDate gender profileImage createdAt'
+      )
       .lean();
 
     if (!user) {
@@ -155,3 +149,72 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
+//**Modificar los datps del usuario autenticado
+// PUT /api/auth/me
+exports.updateMe = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const {
+      firstName,
+      lastName1,
+      lastName2,
+      phone,
+      birthDate,
+      gender,
+      profileImage
+    } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { firstName, lastName1, lastName2, phone, birthDate, gender, profileImage },
+      { new: true }
+    ).select('firstName lastName1 lastName2 email role phone birthDate gender profileImage');
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    res.json({
+      message: 'Perfil actualizado correctamente',
+      user: updatedUser
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error al actualizar perfil' });
+  }
+};
+
+//**Cambiar la contraseña del usuario autenticado
+// POST /api/auth/change-password
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    // Buscar el usuario
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Comprobar contraseña actual
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'La contraseña actual es incorrecta' });
+    }
+
+    // Hashear nueva contraseña
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.passwordHash = hashed;
+    await user.save();
+
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error al cambiar contraseña' });
+  }
+};
+
+

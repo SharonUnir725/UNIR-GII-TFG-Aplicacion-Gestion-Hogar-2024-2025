@@ -103,6 +103,25 @@ export default function CalendarView() {
     setEditingEvent(null);
   };
 
+  // 7) Eliminar evento
+  const handleDeleteEvent = async (eventId) => {
+    if (!token) return;
+    const confirmDelete = window.confirm('¿Seguro que quieres eliminar este evento?');
+    if (!confirmDelete) return;
+
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.delete(`${apiBase}/api/events/${eventId}`, { headers });
+
+      // quitar del estado
+      setEvents(prev => prev.filter(e => e.id !== eventId));
+      setSelectedEvent(null);
+    } catch (err) {
+      console.error('Error eliminando evento:', err);
+      alert('Hubo un error al eliminar el evento.');
+    }
+  };
+
   return (
   <div className="p-4 relative">
     <Calendar
@@ -147,6 +166,7 @@ export default function CalendarView() {
               event={selectedEvent}
               onClose={() => setSelectedEvent(null)}
               onEdit={handleEditEvent}
+              onDelete={handleDeleteEvent}
             />
           </div>
         )}

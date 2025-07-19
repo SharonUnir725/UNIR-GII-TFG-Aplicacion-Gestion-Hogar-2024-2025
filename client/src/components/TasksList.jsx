@@ -85,6 +85,26 @@ export default function TasksList() {
     }
   };
 
+  // eliminar tarea
+  const deleteTask = async (taskId) => {
+    if (!token) return;
+    const confirmDelete = window.confirm('¿Seguro que quieres eliminar esta tarea?');
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`${apiBase}/api/tasks/${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // quitarla del estado
+      setTasks(prev => prev.filter(t => t._id !== taskId));
+      setSelectedTask(null);
+    } catch (err) {
+      setError('Error eliminando la tarea.');
+      console.error(err);
+    }
+  };
+
+
   const handleCreated = newTask => {
     setTasks(prev => [newTask, ...prev]);
     setShowForm(false);
@@ -139,6 +159,11 @@ export default function TasksList() {
               <div key={task._id} className="border rounded p-2 hover:bg-gray-100 cursor-pointer" onClick={() => setSelectedTask(task)}>
                 <div className="font-semibold">{task.title}</div>
                 <div className="text-sm text-gray-600">Prioridad: {capitalize(task.priority)} - Estado: {STATUS_LABELS[task.status]}</div>
+                {task.assignedTo && task.assignedTo.length > 0 && (
+                  <div className="text-sm text-gray-500">
+                    Responsables: {task.assignedTo.map(u => u.firstName).join(', ')}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -153,7 +178,11 @@ export default function TasksList() {
             {currentCompleted.map(task => (
               <div key={task._id} className="border rounded p-2 hover:bg-gray-100 cursor-pointer" onClick={() => setSelectedTask(task)}>
                 <div className="font-semibold">{task.title}</div>
-                <div className="text-sm text-gray-600">Prioridad: {capitalize(task.priority)} - Estado: {STATUS_LABELS[task.status]}</div>
+                {task.assignedTo && task.assignedTo.length > 0 && (
+                  <div className="text-sm text-gray-500">
+                    Responsables: {task.assignedTo.map(u => u.firstName).join(', ')}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -180,6 +209,15 @@ export default function TasksList() {
                 )}
                 <button onClick={() => updateTaskStatus(selectedTask)} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">{STATUS_BUTTON_LABEL[selectedTask.status]}</button>
                 <button onClick={() => setSelectedTask(null)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cerrar</button>
+                {/* Botón para eliminar tarea */}
+                {isOwner && (
+                  <button
+                    onClick={() => deleteTask(selectedTask._id)}
+                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Eliminar
+                  </button>
+                )}
               </div>
             </div>
           )}

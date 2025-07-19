@@ -150,23 +150,29 @@ exports.updateEvent = async (req, res, next) => {
 
 /**
  * DELETE /api/events/:id
- * Eliminar un evento
+ * Eliminar un evento existente de la familia
  */
-exports.deleteEvent = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id, 'familyId');
-    if (!user?.familyId) {
-      return res.status(400).json({ msg: 'Usuario sin familia asignada' });
-    }
-    const familyId = user.familyId;
+  exports.deleteEvent = async (req, res, next) => {
+    try {
+      // 1) Obtener familyId del usuario autenticado
+      const user = await User.findById(req.user.id, 'familyId');
+      if (!user?.familyId) {
+        return res.status(400).json({ msg: 'Usuario sin familia asignada' });
+      }
+      const familyId = user.familyId;
 
-    const result = await Event.deleteOne({ _id: req.params.id, familyId });
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ msg: 'Evento no encontrado' });
-    }
+      // 2) Eliminar el evento asociado a esa familia
+      const result = await Event.deleteOne({ _id: req.params.id, familyId });
+      if (result.deletedCount === 0) {
+        // Evento no encontrado o no pertenece a esta familia
+        return res.status(404).json({ msg: 'Evento no encontrado' });
+      }
 
-    return res.status(204).end();
-  } catch (err) {
-    next(err);
-  }
-};
+      // 3) Respuesta sin contenido tras eliminar correctamente
+      return res.status(204).end();
+    } catch (err) {
+      // Manejo de errores
+      next(err);
+    }
+  };
+

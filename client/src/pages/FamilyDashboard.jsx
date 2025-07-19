@@ -57,7 +57,7 @@ export default function FamilyDashboard() {
 
       <main className="flex-1 p-6">
         <header className="mb-6 border-b pb-4">
-          <h1 className="text-2xl font-bold">{familyData.name}</h1>
+          <h1 className="text-2xl font-bold">Familia {familyData.name}</h1>
           <p className="text-gray-700">Administrador: {familyData.ownerName}</p>
           <p className="text-gray-700">Miembros: {familyData.memberCount}</p>
         </header>

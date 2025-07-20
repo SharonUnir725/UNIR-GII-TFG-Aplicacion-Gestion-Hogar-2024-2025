@@ -1,5 +1,23 @@
 // client/src/components/EventDetail.jsx
+import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { getWeatherForEvent } from '../utils/weatherApi';
+import WeatherForecast from './WeatherForecast';
+
 export default function EventDetail({ event, onClose, onEdit, onDelete }) {
+  const { token } = useAuth();
+  const apiBase = process.env.REACT_APP_API_URL || '';
+  const [weather, setWeather] = useState(null);
+
+  // Obtener la previsión meteorológica cuando se abre el detalle del evento
+  useEffect(() => {
+    if (event?._id) {
+      getWeatherForEvent(event._id, token, apiBase)
+        .then(data => setWeather(data))
+        .catch(err => console.error('Error cargando clima', err));
+    }
+  }, [event, token, apiBase]);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded shadow max-w-lg w-full">
@@ -33,6 +51,9 @@ export default function EventDetail({ event, onClose, onEdit, onDelete }) {
             </p>
           )}
         </div>
+
+        {/* Bloque para mostrar la previsión meteorológica */}
+        <WeatherForecast weather={weather} />
 
         <div className="flex justify-end mt-6 space-x-2">
           {/* Botón cerrar detalle evento */}

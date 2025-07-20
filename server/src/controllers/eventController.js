@@ -1,6 +1,7 @@
 // server/src/controllers/eventController.js
 const Event  = require('../models/event');
 const User   = require('../models/user');
+const { getWeatherForDateTime } = require('../utils/weatherService');
 
 /**
  * GET /api/events
@@ -176,3 +177,79 @@ exports.updateEvent = async (req, res, next) => {
     }
   };
 
+/**
+ * GET /api/events/:id/weather
+ * Consultar y mostrar previsión meteorológica
+ */
+exports.getWeatherForEvent = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id, 'familyId');
+
+    if (!user?.familyId) {
+      return res.status(400).json({ msg: 'Usuario sin familia asignada' });
+    }
+
+    const ev = await Event.findOne({ _id: req.params.id, familyId: user.familyId })
+      .populate('locatedAt')
+      .exec();
+
+    if (!ev || !ev.locatedAt || !ev.locatedAt.location) {
+      return res.status(404).json({ msg: 'Evento no encontrado o sin ubicación' });
+    }
+
+    // Extraer coordenadas
+    const lon = ev.locatedAt.location.coordinates[0];
+    const lat = ev.locatedAt.location.coordinates[1];
+
+    if (lat == null || lon == null) {
+      return res.status(400).json({ msg: 'El evento no tiene coordenadas válidas' });
+    }
+
+    // Obtener fecha/hora del evento
+    const dateTime = new Date(ev.startDateTime);
+    
+    const eventDateOnly = new Date(dateTime.getTime());
+    eventDateOnly.setHours(0, 0, 0, 0);
+
+    const todayDateOnly = new Date();
+    todayDateOnly.setHours(0, 0, 0, 0);
+
+    const diffTime = eventDateOnly - todayDateOnly;
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    // Validaciones de rango de fechas
+    if (diffDays < 0) {
+      return res.json({
+        unavailable: true
+      });
+    }
+    if (diffDays > 3) {
+      return res.json({
+        unavailable: true
+      });
+    }
+
+    // Llamada al servicio de clima
+    const weather = await getWeatherForDateTime(lat, lon, dateTime);
+
+    // Validar que realmente tengamos datos útiles
+    if (
+      !weather ||
+      (
+        weather.temperature == null &&
+        weather.temp_min == null &&
+        weather.temp_max == null &&
+        (!weather.description || weather.description.trim() === '')
+      )
+    ) {
+      return res.json({
+        unavailable: true,
+        msg: 'No hay datos de clima disponibles para este evento.'
+      });
+    }
+    res.json(weather);
+
+  } catch (err) {
+    res.status(500).json({ msg: 'Error obteniendo clima' });
+  }
+};

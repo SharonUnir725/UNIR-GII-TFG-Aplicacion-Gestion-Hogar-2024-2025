@@ -6,7 +6,8 @@ const {
   createEvent,
   getEventById,
   updateEvent,
-  deleteEvent
+  deleteEvent,
+  getWeatherForEvent 
 } = require('../controllers/eventController');
 
 const router = express.Router();
@@ -30,5 +31,9 @@ router.put('/:id', authenticate, updateEvent);
 //** Eliminar un evento
 // DELETE /api/events/:id
 router.delete('/:id', authenticate, deleteEvent);
+
+//** Obtener la previsión meteorológica de un evento
+// GET /api/events/:id/weather
+router.get('/:id/weather', authenticate, getWeatherForEvent);
 
 module.exports = router;

@@ -9,7 +9,7 @@ const { generateToken, tokenExpiresIn } = require('../utils/token');
 // POST /api/auth/register
 exports.register = async (req, res) => {
   try {
-    const { firstName, lastName1, lastName2, email, password, role } = req.body;
+    const { firstName, lastName1, lastName2, email, password, role, phone, birthDate, gender } = req.body;
 
     // 1) Comprobar que no exista un usuario con ese email
     const existingUser = await User.findOne({ email });
@@ -32,6 +32,9 @@ exports.register = async (req, res) => {
       email,
       passwordHash,
       role,
+      phone,
+      birthDate,
+      gender,
       emailVerificationToken,
       emailVerificationExpires,
       emailVerified: false

@@ -67,34 +67,44 @@ export default function AssocDetail({ notification }) {
 
   return (
     <>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {/* Mensaje de error */}
+      {error && (
+        <p className="text-red-600 mb-4">{error}</p>
+      )}
 
-      <div style={{ border: '1px solid #ccc', padding: '1rem' }}>
-        <p>
+      {/* Contenedor principal de la solicitud */}
+      <div className="border rounded-lg p-4 bg-white shadow mb-4">
+        <p className="text-gray-800">
           El usuario <strong>{userName}</strong> solicita unirse a la familia.
         </p>
       </div>
 
+      {/* Acciones según estado */}
       {jrStatus === 'pendiente' && (
-        <div style={{ marginTop: '1rem' }}>
+        <div className="mt-4 flex space-x-4">
           <button
             onClick={() => handleDecision('approve')}
-            style={{ marginRight: 8 }}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
           >
             Aprobar
           </button>
-          <button onClick={() => handleDecision('reject')}>Rechazar</button>
+          <button
+            onClick={() => handleDecision('reject')}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700"
+          >
+            Rechazar
+          </button>
         </div>
       )}
 
       {jrStatus === 'aprobado' && (
-        <div style={{ marginTop: '1rem', border: '1px solid #ccc', padding: '1rem' }}>
+        <div className="mt-4 border rounded-lg p-4 bg-green-50 shadow text-green-700">
           <p>Has aprobado la solicitud.</p>
         </div>
       )}
 
       {jrStatus === 'denegado' && (
-        <div style={{ marginTop: '1rem', border: '1px solid #ccc', padding: '1rem' }}>
+        <div className="mt-4 border rounded-lg p-4 bg-red-50 shadow text-red-700">
           <p>Has rechazado la solicitud.</p>
         </div>
       )}

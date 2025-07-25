@@ -3,78 +3,86 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Login() {
-  const [form, setForm]   = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
-  const nav               = useNavigate();
-  const { login, user }   = useAuth();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const nav = useNavigate();
+  const { login, user } = useAuth();
 
-  // Si ya hay usuario en contexto, redirige al Dashboard
   useEffect(() => {
     if (user) {
       nav('/dashboard');
     }
   }, [user, nav]);
 
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const baseUrl = process.env.REACT_APP_API_URL || '';
-      const res     = await axios.post(
-        `${baseUrl}/api/auth/login`,
-        form
-      );
-      // Guarda el token en el contexto (actualiza estado y dispara recarga de perfil)
+      const res = await axios.post(`${baseUrl}/api/auth/login`, form);
       login(res.data.token);
     } catch (err) {
       if (err.response && err.response.status === 403) {
-      setError('Debes verificar tu correo electrónico antes de iniciar sesión.');
+        toast.error('Debes verificar tu correo electrónico antes de iniciar sesión.');
       } else if (err.response && err.response.status === 401) {
-      setError('Correo o contraseña incorrectos.');
+        toast.error('Correo o contraseña incorrectos.');
       } else {
-      setError('Error al intentar iniciar sesión.');
+        toast.error('Error al intentar iniciar sesión.');
       }
     }
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '2rem auto' }}>
-      <h2>Login</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-          required
-          className="w-full mb-2 p-2 border rounded"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Contraseña"
-          onChange={handleChange}
-          required
-          className="w-full mb-4 p-2 border rounded"
-        />
-        <button
-          type="submit"
-          className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Login
-        </button>
-      </form>
-      <p className="mt-4 text-center">
-        Nuevo? <Link to="/register" className="text-blue-600 hover:underline">Regístrate aquí</Link>
-      </p>
-      <p className="text-sm mt-2">
-        <Link to="/forgot-password" className="text-blue-600 hover:underline">¿Olvidaste tu contraseña?
-        </Link>
-      </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white shadow rounded-lg p-8 w-full max-w-md">
+        <h2 className="text-2xl font-bold text-center mb-6">Iniciar Sesión</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            onChange={handleChange}
+            required
+            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Contraseña"
+            onChange={handleChange}
+            required
+            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            className="w-full py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700"
+          >
+            Login
+          </button>
+        </form>
+        <p className="mt-4 text-center">
+          ¿Nuevo?{' '}
+          <Link
+            to="/register"
+            className="text-blue-600 font-medium hover:underline"
+          >
+            Regístrate aquí
+          </Link>
+        </p>
+        <p className="mt-2 text-center">
+          <Link
+            to="/forgot-password"
+            className="text-sm text-blue-600 hover:underline"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

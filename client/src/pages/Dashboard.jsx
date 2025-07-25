@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import defaultAvatar from '../assets/default-avatar.png';
 
 export default function Dashboard() {
   // Ahora extraemos token, user, loading y logout
@@ -38,15 +39,19 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
-      <p className="text-lg mb-4">
-        Hola, {user.firstName} {user.lastName1} {user.lastName2}
-      </p>
-
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Bienvenido a tu Dashboard</h1>
-        <Link to="/dashboard/notifications" className="relative">
-          <span role="img" aria-label="notificaciones" className="text-2xl">
+    <div className="p-6 max-w-4xl mx-auto">
+      {/* Cabecera con avatar y bienvenida */}
+      <div className="flex items-center gap-4 mb-6">
+        <img
+          src={user.profileImage && user.profileImage.trim() !== '' ? user.profileImage : defaultAvatar}
+          alt="Avatar de perfil"
+          className="w-20 h-20 rounded-full border object-cover"
+        />
+        <div>
+          <h1 className="text-3xl font-bold">👋 Hola {user.firstName}!</h1>
+        </div>
+        <Link to="/dashboard/notifications" className="ml-auto relative">
+          <span role="img" aria-label="notificaciones" className="text-3xl">
             🔔
           </span>
           {notifCount > 0 && (
@@ -57,51 +62,40 @@ export default function Dashboard() {
         </Link>
       </div>
 
-<div className="flex flex-col gap-4 mb-6">
-        <div className="flex gap-4">
-          {/* Si NO tienes familia, mostramos Crear/Asociarse */}
-          {!user.familyId && (
-            <>
-              <Link to="/dashboard/create-family">
-                <button className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700">
-                  Crear una familia
-                </button>
-              </Link>
-              <Link to="/dashboard/join-family">
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
-                  Asociarse a una familia
-                </button>
-              </Link>
-            </>
-          )}
-
-          {/* Logout siempre visible */}
-          <button
-            onClick={logout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700"
-          >
-            Logout
-          </button>
-
-          {/* Botón Ver / Editar Perfil */}
-          <Link to="/profile">
-            <button className="px-4 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700">
-              Ver / Editar mi Perfil
-            </button>
-          </Link>
-
-          {/* Botón “Ver Mi Familia” si existe familyId */}
-          {user.familyId && (
-            <Link to="/family">
-              <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700">
-                Ver Mi Familia
+      {/* Botones principales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {!user.familyId && (
+          <>
+            <Link to="/dashboard/create-family">
+              <button className="w-full py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700">
+                Crear una familia
               </button>
             </Link>
-          )}
-
-
-
-        </div>
+            <Link to="/dashboard/join-family">
+              <button className="w-full py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
+                Asociarse a una familia
+              </button>
+            </Link>
+          </>
+        )}
+        {user.familyId && (
+          <Link to="/family">
+            <button className="w-full py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700">
+              Ver Mi Familia
+            </button>
+          </Link>
+        )}
+        <Link to="/profile">
+          <button className="w-full py-3 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700">
+            Ver / Editar mi Perfil
+          </button>
+        </Link>
+        <button
+          onClick={logout}
+          className="w-full py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700"
+        >
+          Logout
+        </button>
       </div>
     </div>
   );

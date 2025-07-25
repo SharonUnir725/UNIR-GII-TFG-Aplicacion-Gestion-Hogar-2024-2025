@@ -43,7 +43,7 @@ export default function AddressForm({
       setLoading(true)
       const headers = { Authorization: `Bearer ${token}` }
       const res = await axios.post(
-        `${apiBase}${apiEndpoint}`,  // ← usa el endpoint que le pases
+        `${apiBase}${apiEndpoint}`,  
         payload,
         { headers }
       )

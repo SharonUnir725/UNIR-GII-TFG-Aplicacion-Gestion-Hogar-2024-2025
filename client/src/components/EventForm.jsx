@@ -79,6 +79,17 @@ export default function EventForm({
     setShowAddressForm(false);
   };
 
+    // Manejo de cambio en fecha/hora de inicio
+  const handleStartChange = e => {
+    const value = e.target.value;
+    setStartDateTime(value);
+
+    const start = new Date(value);
+    // Fecha fin automáticamente mismo día/hora+1
+    const newEnd = new Date(start.getTime() + 60 * 60 * 1000);
+    setEndDateTime(toInputDateTime(newEnd));
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
@@ -176,7 +187,7 @@ export default function EventForm({
           <input
             type="datetime-local"
             value={startDateTime}
-            onChange={e => setStartDateTime(e.target.value)}
+            onChange={handleStartChange}
             required
             className="w-full border p-2 rounded"
           />

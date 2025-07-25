@@ -9,7 +9,7 @@ export default function Notifications() {
   const [error, setError] = useState('');
   const nav = useNavigate();
 
-  // 👉 estado para la paginación
+  // estado para la paginación
   const itemsPerPage = 8; // cantidad por página
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -32,24 +32,24 @@ export default function Notifications() {
     })();
   }, []);
 
-  if (loading) return <p className="text-center mt-6">Cargando notificaciones…</p>;
+  if (loading) return <p className="text-center mt-6 text-gray-700">Cargando notificaciones…</p>;
 
-  // 👉 lógica de paginación
+  // lógica de paginación
   const totalPages = Math.ceil(notifs.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = notifs.slice(startIndex, startIndex + itemsPerPage);
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6 text-center">📌 Notificaciones</h2>
+    <div className="max-w-5xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">📌 Notificaciones</h2>
 
       {error ? (
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-600 text-center">{error}</p>
       ) : notifs.length === 0 ? (
-        <p className="text-gray-700">No tienes notificaciones.</p>
+        <p className="text-gray-700 text-center">No tienes notificaciones.</p>
       ) : (
         <>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {currentItems.map((n) => {
               let title;
               switch (n.type) {
@@ -86,21 +86,23 @@ export default function Notifications() {
               return (
                 <li
                   key={n._id}
-                  className={`border rounded p-4 shadow-sm hover:shadow-md transition ${
-                    n.status === 'read' ? 'opacity-50' : ''
+                  className={`border rounded-lg p-5 bg-gray-50 hover:bg-gray-100 transition duration-200 shadow-sm hover:shadow-md ${
+                    n.status === 'read' ? 'opacity-60' : ''
                   }`}
                 >
                   <Link
                     to={`/dashboard/notifications/${n._id}`}
-                    className="flex flex-col justify-between h-full text-black no-underline"
+                    className="flex flex-col justify-between h-full text-gray-800 no-underline"
                   >
-                    <div>
-                      <strong className="text-lg">{title}</strong>
+                    <div className="flex items-center justify-between">
+                      <strong className="text-lg font-semibold">{title}</strong>
                       {isNew && (
-                        <span className="text-red-500 ml-2 text-sm font-semibold">• NUEVO</span>
+                        <span className="text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                          NUEVO
+                        </span>
                       )}
                     </div>
-                    <span className="text-gray-500 text-sm mt-2">{receivedAt}</span>
+                    <span className="text-gray-500 text-sm mt-3">{receivedAt}</span>
                   </Link>
                 </li>
               );
@@ -108,23 +110,25 @@ export default function Notifications() {
           </ul>
 
           {/* Controles de paginación */}
-          <div className="flex justify-between items-center mt-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-8 space-y-4 sm:space-y-0">
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded text-white ${
-                currentPage === 1 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              className={`px-4 py-2 rounded-md text-white font-medium ${
+                currentPage === 1
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
               }`}
             >
               ← Anterior
             </button>
             <p className="text-gray-700">
-              Página {currentPage} de {totalPages}
+              Página <span className="font-semibold">{currentPage}</span> de <span className="font-semibold">{totalPages}</span>
             </p>
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded text-white ${
+              className={`px-4 py-2 rounded-md text-white font-medium ${
                 currentPage === totalPages
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700'
@@ -136,10 +140,10 @@ export default function Notifications() {
         </>
       )}
 
-      <div className="mt-8 flex justify-start">
+      <div className="mt-10 text-center">
         <button
           onClick={() => nav('/dashboard')}
-          className="inline-block px-4 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
         >
           ← Volver al Dashboard
         </button>

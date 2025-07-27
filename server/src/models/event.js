@@ -1,7 +1,7 @@
 // server/src/models/event.js
+// Modelo de evento para la aplicación que se muestrará en el calendario
 
-const mongoose = require('mongoose');
-const { Schema, model } = mongoose;
+const { Schema, model } = require('mongoose');
 
 const EventSchema = new Schema({
   // Título del evento
@@ -23,14 +23,14 @@ const EventSchema = new Schema({
     required: true
   },
 
-  // Ubicación del evento: FK a la dirección del evento Address
+  // Ubicación del evento: FK a Address
   locatedAt: {
     type: Schema.Types.ObjectId,
     ref: 'Address',
     required: true
   },
 
-  // Array de participantes (uno o varios miembros de la familia)
+  // Array de identificadores de participantes (uno o varios miembros de la familia): FK a User
   participants: [
     {
       type: Schema.Types.ObjectId,
@@ -46,14 +46,14 @@ const EventSchema = new Schema({
     trim: true,
   },
 
-  // Usuario que creó el evento
+  // Identificador del usuario que creó el evento: FK a User
   createdBy: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
 
-  // Referencia a la familia a la que pertenece este evento
+  // Identificador de la familia a la que pertenece este evento: FK a Family
   familyId: {
     type: Schema.Types.ObjectId,
     ref: 'Family',
@@ -61,8 +61,9 @@ const EventSchema = new Schema({
   },
 
 }, {
+  // Agrega automáticamente los campos createdAt y updatedAt
   timestamps: true
 });
 
-
+// Exportación del modelo para su uso en el resto de la aplicación
 module.exports = model('Event', EventSchema);

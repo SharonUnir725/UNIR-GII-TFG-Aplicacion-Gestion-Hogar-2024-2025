@@ -1,7 +1,7 @@
 // server/src/models/address.js
+// Modelo de dirección utilizado para almacenar ubicaciones asociadas a usuarios 
 
-const mongoose = require('mongoose');
-const { Schema, model } = mongoose;
+const { Schema, model } = require('mongoose');
 
 const AddressSchema = new Schema({
   // Nombre de la vía o calle
@@ -16,19 +16,19 @@ const AddressSchema = new Schema({
     required: true,
     trim: true
   },
-  // Bloque o torre del edificio (p. ej. “B”, “3”)
+  // Bloque o torre del edificio
   block: {
     type: String,
     default: '',
     trim: true
   },
-  // Escalera o portal dentro del bloque (p. ej. “1”, “A”)
+  // Escalera o portal dentro del bloque
   staircase: {
     type: String,
     default: '',
     trim: true
   },
-  // Planta o piso (p. ej. “2”, “PB”)
+  // Planta o piso
   floor: {
     type: String,
     default: '',
@@ -40,7 +40,7 @@ const AddressSchema = new Schema({
     default: '',
     trim: true
   },
-  // Código postal (por ejemplo “46210”)
+  // Código postal
   postalCode: {
     type: String,
     required: true,
@@ -64,7 +64,8 @@ const AddressSchema = new Schema({
     required: true,
     trim: true
   },
-  // Coordenadas geográficas (GeoJSON Point: [ longitud, latitud ])
+  // Campo de ubicación geográfica en formato GeoJSON.
+  // Se almacena como un punto con coordenadas [longitud, latitud].
   location: {
     type: {
       type: String,
@@ -76,17 +77,20 @@ const AddressSchema = new Schema({
       required: true
     }
   },
-  // Referencia a la familia asociada (_id de la colección “Family”)
+  // Identificador de la familia asociada: FK a familia a la que pertenece la dirección
   familyId: {
     type: Schema.Types.ObjectId,
     ref: 'Family',
     required: true
   }
+  
 }, {
+  // Agrega automáticamente los campos createdAt y updatedAt
   timestamps: true
 });
 
 // Crear un índice 2dsphere para búsquedas geoespaciales
 AddressSchema.index({ location: '2dsphere' });
 
+// Exportación del modelo para su uso en el resto de la aplicación
 module.exports = model('Address', AddressSchema);

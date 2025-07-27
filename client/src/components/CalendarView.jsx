@@ -1,4 +1,3 @@
-// client/src/components/CalendarView.jsx
 import { useEffect, useState } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { parse, startOfWeek, getDay, format } from 'date-fns';
@@ -7,6 +6,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import EventForm from './EventForm';
 import EventDetail from './EventDetail';
+import ParticipantsSelector from './ParticipantsSelector';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 // Localizador con date-fns y locale español
@@ -14,44 +14,76 @@ const locales = { es };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
 export default function CalendarView() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const apiBase = process.env.REACT_APP_API_URL || '';
 
-  // Estados
-  const [events, setEvents]               = useState([]);
-  const [date, setDate]                   = useState(new Date());
-  const [view, setView]                   = useState('month');
-  const [slot, setSlot]                   = useState(null);
-  const [showForm, setShowForm]           = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [editingEvent, setEditingEvent]   = useState(null);
+  // Estados para eventos y filtros
+  const [events, setEvents]                 = useState([]);
+  const [members, setMembers]               = useState([]); // Miembros de la familia
+  const [selectedMembers, setSelectedMembers] = useState([]); // IDs seleccionados en el filtro
+  const [filterStart, setFilterStart]       = useState('');
+  const [filterEnd, setFilterEnd]           = useState('');
 
-  // 1) Cargar eventos
+  // Estados para la interacción del calendario
+  const [date, setDate]                     = useState(new Date());
+  const [view, setView]                     = useState('month');
+  const [slot, setSlot]                     = useState(null);
+  const [showForm, setShowForm]             = useState(false);
+  const [selectedEvent, setSelectedEvent]   = useState(null);
+  const [editingEvent, setEditingEvent]     = useState(null);
+
+  // Cargar miembros de la familia desde el backend
   useEffect(() => {
-    if (!token) return;
+    if (!token || !user?.familyId) return;
     const headers = { Authorization: `Bearer ${token}` };
     axios
-      .get(`${apiBase}/api/events`, { headers })
+      .get(`${apiBase}/api/users?familyId=${user.familyId}`, { headers }) // solo miembros de la familia
+      .then(res => setMembers(res.data))
+      .catch(err => console.error('Error cargando miembros de familia:', err));
+  }, [token, user?.familyId, apiBase]);
+
+  // Función para cargar eventos con filtros opcionales
+  const loadEvents = () => {
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+    const params = {};
+
+    // Filtrar por participante si hay alguno seleccionado
+    if (selectedMembers.length > 0) {
+      params.userId = selectedMembers[0];
+    }
+    // Filtrar por rango de fechas si se han seleccionado
+    if (filterStart) params.startDate = filterStart;
+    if (filterEnd) params.endDate = filterEnd;
+
+    axios
+      .get(`${apiBase}/api/events`, { headers, params })
       .then(res => {
         setEvents(
           res.data.map(e => ({
-            id:    e._id,
+            id: e._id,
             title: e.title,
             start: new Date(e.startDateTime),
-            end:   new Date(e.endDateTime),
+            end: new Date(e.endDateTime),
           }))
         );
       })
       .catch(err => console.error('Error cargando eventos:', err));
-  }, [token, apiBase]);
+  };
 
-  // 2) Seleccionar slot para crear evento
+  // Cargar eventos al iniciar
+  useEffect(() => {
+    loadEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  // Abrir formulario al seleccionar un espacio vacío en el calendario
   const handleSelectSlot = ({ start, end }) => {
     setSlot({ start, end });
     setShowForm(true);
   };
 
-  // 3) Clic en evento para ver detalle
+  // Mostrar detalle de un evento al hacer clic
   const handleSelectEvent = evt => {
     if (!token) return;
     const headers = { Authorization: `Bearer ${token}` };
@@ -61,44 +93,44 @@ export default function CalendarView() {
       .catch(err => console.error('Error cargando detalle:', err));
   };
 
-  // 4) Tras creación
+  // Añadir un nuevo evento tras crear
   const handleCreated = newEvent => {
     setEvents(prev => [
       ...prev,
       {
-        id:    newEvent._id,
+        id: newEvent._id,
         title: newEvent.title,
         start: new Date(newEvent.startDateTime),
-        end:   new Date(newEvent.endDateTime),
+        end: new Date(newEvent.endDateTime),
       },
     ]);
     setShowForm(false);
     setSlot(null);
   };
 
-  // 5) Al pulsar "Modificar evento" en el detalle
+  // Preparar edición de un evento
   const handleEditEvent = evData => {
     setEditingEvent({
-      _id:           evData._id,
-      title:         evData.title,
+      _id: evData._id,
+      title: evData.title,
       startDateTime: evData.startDateTime,
-      endDateTime:   evData.endDateTime,
-      locatedAt:     evData.locatedAt?._id,
-      participants:  evData.participants.map(u => u._id),
+      endDateTime: evData.endDateTime,
+      locatedAt: evData.locatedAt?._id,
+      participants: evData.participants.map(u => u._id),
     });
     setSelectedEvent(null);
   };
 
-  // 6) Tras actualizar
+  // Actualizar evento tras edición
   const handleUpdated = upd => {
     setEvents(prev =>
       prev.map(e =>
         e.id === upd._id
           ? {
-              id:    upd._id,
+              id: upd._id,
               title: upd.title,
               start: new Date(upd.startDateTime),
-              end:   new Date(upd.endDateTime),
+              end: new Date(upd.endDateTime),
             }
           : e
       )
@@ -106,7 +138,7 @@ export default function CalendarView() {
     setEditingEvent(null);
   };
 
-  // 7) Eliminar evento
+  // Eliminar un evento
   const handleDeleteEvent = async eventId => {
     if (!token) return;
     const confirmDelete = window.confirm('¿Seguro que quieres eliminar este evento?');
@@ -125,7 +157,43 @@ export default function CalendarView() {
 
   return (
     <div className="p-6">
-      {/* Contenedor del calendario */}
+      {/* Controles de filtros */}
+      <div className="mb-4 flex flex-col md:flex-row gap-4">
+        {/* Selector de participantes (miembros de la familia) */}
+        <ParticipantsSelector
+          members={members}
+          selected={selectedMembers}
+          onChange={setSelectedMembers}
+        />
+
+        {/* Selector de fechas para rango */}
+        <div className="flex flex-col gap-2">
+          <label>Desde:</label>
+          <input
+            type="date"
+            value={filterStart}
+            onChange={e => setFilterStart(e.target.value)}
+            className="border p-2 rounded"
+          />
+          <label>Hasta:</label>
+          <input
+            type="date"
+            value={filterEnd}
+            onChange={e => setFilterEnd(e.target.value)}
+            className="border p-2 rounded"
+          />
+        </div>
+
+        {/* Botón para aplicar filtros */}
+        <button
+          onClick={loadEvents}
+          className="bg-blue-600 text-white px-4 py-2 rounded self-end"
+        >
+          Aplicar filtros
+        </button>
+      </div>
+
+      {/* Calendario principal */}
       <div className="bg-white rounded-lg shadow-md p-4 overflow-x-auto">
         <Calendar
           localizer={localizer}
@@ -153,7 +221,7 @@ export default function CalendarView() {
           onSelectEvent={handleSelectEvent}
           eventPropGetter={() => ({
             style: {
-              backgroundColor: '#2563eb', 
+              backgroundColor: '#2563eb',
               borderRadius: '6px',
               padding: '2px 4px',
               color: '#fff',
@@ -163,7 +231,7 @@ export default function CalendarView() {
         />
       </div>
 
-      {/* Modales */}
+      {/* Formularios y modales para eventos */}
       {(showForm && slot) || selectedEvent || editingEvent ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           {showForm && slot && (

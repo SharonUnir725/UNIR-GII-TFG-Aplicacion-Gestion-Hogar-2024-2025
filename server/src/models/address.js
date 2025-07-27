@@ -1,7 +1,7 @@
 // server/src/models/address.js
 // Modelo de dirección utilizado para almacenar ubicaciones asociadas a usuarios 
 
-const { Schema, model } = require('mongoose');
+const { Schema, model, Types } = require('mongoose');
 
 const AddressSchema = new Schema({
   // Nombre de la vía o calle

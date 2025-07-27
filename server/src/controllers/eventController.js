@@ -6,6 +6,7 @@ const { getWeatherForDateTime } = require('../utils/weatherService');
 /**
  * GET /api/events
  * Listar todos los eventos de la familia
+ * Admite filtros opcionales por usuario (userId) y rango de fechas (startDate, endDate)
  */
 exports.getAllEvents = async (req, res, next) => {
   try {
@@ -15,13 +16,30 @@ exports.getAllEvents = async (req, res, next) => {
       return res.status(400).json({ msg: 'Usuario sin familia asignada' });
     }
 
-    // 2) Buscar y poblar
-    let events = await Event.find({ familyId: user.familyId })
+    // 2) Construir filtro base
+    const filter = { familyId: user.familyId };
+
+    // 3) Filtros opcionales
+    const { userId, startDate, endDate } = req.query;
+
+    if (userId) {
+      // Buscar eventos donde el usuario es participante
+      filter.participants = userId;
+    }
+
+    if (startDate || endDate) {
+      filter.startDateTime = {};
+      if (startDate) filter.startDateTime.$gte = new Date(startDate);
+      if (endDate) filter.startDateTime.$lte = new Date(endDate);
+    }
+
+    // 4) Buscar y poblar
+    let events = await Event.find(filter)
       .populate('locatedAt')
       .populate('participants', 'firstName lastName1')
       .exec();
 
-    // 3) Eliminar posibles null en participants
+    // 5) Eliminar posibles null en participants
     events = events.map(ev => {
       ev.participants = (ev.participants || []).filter(u => !!u);
       return ev;

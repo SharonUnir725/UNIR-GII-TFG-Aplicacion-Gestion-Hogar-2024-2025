@@ -1,7 +1,7 @@
 // server/src/models/task.js
 // Modelo de tareas que almacena tareas asociadas a una familia
 
-const { Schema } = require('mongoose');
+const { Schema, model, Types } = require('mongoose');
 
 const TaskSchema = new Schema({
 
@@ -59,4 +59,4 @@ const TaskSchema = new Schema({
 });
 
 // Exportación del modelo para su uso en el resto de la aplicación
-module.exports = mongoose.model('Task', TaskSchema);
+module.exports = model('Task', TaskSchema);

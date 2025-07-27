@@ -2,7 +2,7 @@
 // Modelo de notificaciones que permite almacenar avisos 
 // para usuarios concretos sobre acciones que ocurren en una familia
 
-const { Schema } = require('mongoose');
+const { Schema, model, Types } = require('mongoose');
 
 const NotificationSchema = new Schema({
 
@@ -55,4 +55,4 @@ const NotificationSchema = new Schema({
 });
 
 // Exportación del modelo para su uso en el resto de la aplicación
-module.exports = mongoose.model('Notification', NotificationSchema);
+module.exports = model('Notification', NotificationSchema);

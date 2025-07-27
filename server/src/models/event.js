@@ -1,7 +1,7 @@
 // server/src/models/event.js
 // Modelo de evento para la aplicación que se muestrará en el calendario
 
-const { Schema, model } = require('mongoose');
+const { Schema, model, Types } = require('mongoose');
 
 const EventSchema = new Schema({
   // Título del evento

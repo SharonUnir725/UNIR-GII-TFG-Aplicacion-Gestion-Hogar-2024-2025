@@ -35,7 +35,7 @@ const TaskSchema = new Schema({
   // Fecha límite de la tarea
   dueDate: {
     type: Date,
-    default: null,
+    required: true
   },
 
   // Estado actual de la tarea: pendiente (por defecto), en_progreso, completada

@@ -22,7 +22,6 @@ const UserSchema = new Schema({
   // Segundo apellido
   lastName2: {
     type: String,
-    required: true,
     trim: true
   },
 

@@ -1,4 +1,5 @@
 // src/controllers/userController.js
+// Controlador de usuarios: define la lógica de negocio relacionada con la gestión de usuarios.
 const User = require('../models/user');
 const isValidId = require('../helpers/isValidId');
 const mailer = require('../utils/mailer');
@@ -6,13 +7,15 @@ const bcrypt = require('bcrypt');
 const { generateToken, tokenExpiresIn } = require('../utils/token');
 
 
-//**Listar todos los usuarios
-// GET /api/users
+/**Listar todos los usuarios
+  * GET /api/users
+  * Devuelve todos los usuarios o filtra por familyId si se proporciona el query param.
+  */
 exports.listUsers = async (req, res) => {
   try {
     const { familyId } = req.query;
 
-    // Si viene familyId, filtramos; si no, devolvemos todos
+    // Solamente si se detecta familyId, se filtra
     const filter = familyId ? { familyId } : {};
 
     const users = await User
@@ -29,8 +32,13 @@ exports.listUsers = async (req, res) => {
   }
 };
 
-//**Obtener datos de un usuario por su ID
-// GET /api/users/:id
+/**
+ * Obtener un usuario por ID
+ * GET /api/users/:id
+ * - Valida formato de ObjectId.
+ * - Excluye passwordHash de la respuesta.
+ * - 400 si el ID no es válido; 404 si no existe.
+ */
 exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -48,57 +56,11 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-//**Crear un nuevo usuario
-// POST /api/users
-exports.createUser = async (req, res) => {
-  try {
-    const data = req.body;
-
-    // 1. Crear token de verificación
-    const token = generateToken();
-    data.verificationToken = token;
-    data.verificationTokenExpires = tokenExpiresIn(24); // válido por 24h
-
-    // 2. Crear y guardar el usuario
-    const user = new User(data);
-    await user.save();
-
-    // 3. Enviar correo de verificación
-    const verifyUrl = `http://localhost:3000/verify-email/${token}`;
-    await mailer.sendMail({
-      to: user.email,
-      subject: 'Verificación de correo',
-      text: `Haz clic en el siguiente enlace para verificar tu cuenta: ${verifyUrl}`
-    });
-
-    res.status(201).json({ message: 'Usuario creado correctamente. Verifica tu correo.', user });
-
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: err.message });
-  }
-};
-
-//**Actualizar un usuario existente
-// PUT /api/users/:id
-exports.updateUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!isValidId(id)) return res.status(400).json({ error: 'ID de usuario no válido' });
-
-    const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true })
-      .select('-passwordHash');
-    if (!updatedUser) return res.status(404).json({ error: 'Usuario no encontrado' });
-
-    res.json({ message: 'Usuario actualizado correctamente', user: updatedUser });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: err.message });
-  }
-};
-
-//**Eliminar un usuario
-// DELETE /api/users/:id
+/**
+ * Eliminar un usuario
+ * DELETE /api/users/:id
+ * - Valida ID; 404 si no existe.
+ */
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -114,15 +76,22 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-//**Recuperar contraseña
+/**
+ * Solicitar recuperación de contraseña
+ * POST /api/users/forgot-password
+ * Body: { email }
+ * Genera token de un solo uso y caducidad (1h); envía email con enlace.
+ */
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
 
   if (!user) {
+    // No revelar existencia de la cuenta
     return res.status(200).json({ message: 'Correo enviado (si el email existe).' });
   }
 
+  // Token de reset + expiración
   const token = generateToken();
   user.resetPasswordToken = token;
   user.resetPasswordExpires = tokenExpiresIn(1); // 1 hora
@@ -138,14 +107,19 @@ exports.forgotPassword = async (req, res) => {
   res.json({ message: 'Correo enviado (si el email existe).' });
 };
 
-//**Reset contraseña
-// POST /api/users/reset-password/:token
+/**
+ * Resetear contraseña con token
+ * POST /api/users/reset-password/:token
+ * Body: { password }
+ * - Comprueba token válido (no expirado).
+ * - Hashea la nueva contraseña y limpia el token de un solo uso.
+ * - 400 si token inválido/expirado; 200 si OK.
+ */
 exports.resetPassword = async (req, res) => {
   const { token } = req.params
   const { password } = req.body
 
   try {
-    console.log('Token recibido:', token);
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() } 
@@ -158,7 +132,7 @@ exports.resetPassword = async (req, res) => {
     // Hashear nueva contraseña y guardar
     const hashedPassword = await bcrypt.hash(password, 10);
     user.passwordHash = hashedPassword;
-
+    // Limpiar credenciales de reset (un solo uso)
     user.resetPasswordToken = undefined
     user.resetPasswordExpires = undefined
     await user.save()
@@ -169,31 +143,3 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: 'Error del servidor' })
   }
 };
-
-//** Verificar correo electrónico
-// GET /api/users/verify-email/:token
-exports.verifyEmail = async (req, res) => {
-  const { token } = req.params;
-
-  try {
-    const user = await User.findOne({
-      emailVerificationToken: token,
-      emailVerificationExpires: { $gt: Date.now() } // token válido
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: 'Token inválido o expirado' });
-    }
-
-    user.verificationToken = undefined;
-    user.verificationTokenExpires = undefined;
-    user.isVerified = true;
-    await user.save();
-
-    res.json({ message: 'Correo verificado correctamente' });
-  } catch (err) {
-    console.error('Error en verifyEmail:', err);
-    res.status(500).json({ message: 'Error del servidor' });
-  }
-};
-

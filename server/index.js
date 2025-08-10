@@ -1,4 +1,7 @@
 // server/index.js
+// Iniciar el backend
+
+// Importación de dependencias necesarias
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -6,14 +9,15 @@ require("dotenv").config();
 
 const app = express();
 
-// Middleware
+// Aplicación de middlewares globales
 app.use(cors()); 
 app.use(express.json()); 
 
-//comprobar que el usuario está autenticado via JWT y provee req.user para rutas protegidas.
+// Middleware de autenticación para rutas protegidas
 const authenticate = require('./src/middleware/auth'); 
 
-// Rutas de autenticación (register / login)
+// Definición de rutas públicas y protegidas
+// Rutas de autenticación (login y registro)
 const authRoutes = require('./src/routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
@@ -29,7 +33,7 @@ app.use('/api/families', authenticate, familyRoutes);
 const notificationRoutes = require('./src/routes/notificationRoutes');
 app.use('/api/notifications', authenticate, notificationRoutes);
 
-// Rutas de direcciones (usuarios autenticados)
+// Rutas de direcciones físicas (usuarios autenticados)
 const addressRoutes = require('./src/routes/addressRoutes');
 app.use('/api/address', authenticate, addressRoutes);
 
@@ -41,12 +45,12 @@ app.use('/api/tasks', authenticate, taskRoutes);
 const eventRoutes = require('./src/routes/eventRoutes');
 app.use('/api/events', authenticate, eventRoutes);
 
-// Conexión a MongoDB
+// Conexión a la base de datos MongoDB usando la URI desde .env
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("Conectado a MongoDB"))
   .catch(err => console.error("Error de conexión a MongoDB:", err));
 
-// Iniciar servidor
+// Inicialización del servidor en el puerto especificado
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor escuchando en puerto ${PORT}`));
 

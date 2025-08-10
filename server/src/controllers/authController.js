@@ -153,7 +153,7 @@ exports.getMe = async (req, res) => {
   }
 };
 
-//**Modificar los datps del usuario autenticado
+//**Modificar los datos del usuario autenticado
 // PUT /api/auth/me
 exports.updateMe = async (req, res) => {
   try {

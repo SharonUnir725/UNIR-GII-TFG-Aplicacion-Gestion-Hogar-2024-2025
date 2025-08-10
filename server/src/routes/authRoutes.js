@@ -27,6 +27,7 @@ router.put('/me', auth, updateMe);
 router.post('/change-password', auth, changePassword);
 
 // Verificar correo
+// GET /api/auth/verify-email/:token
 router.get('/verify-email/:token', authController.verifyEmail);
 
 module.exports = router;

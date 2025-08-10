@@ -1,4 +1,5 @@
 // src/helpers/isValidId.js
+// Función de utilidad que valida si un identificador es un ObjectId válido de MongoDB.
 const { Types } = require('mongoose');
 
 /**

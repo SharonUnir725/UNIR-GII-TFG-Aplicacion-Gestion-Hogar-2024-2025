@@ -1,4 +1,5 @@
 // src/routes/AppRoutes.jsx
+// Enrutamiento central de la app: declara rutas públicas y privadas, aplicando PrivateRoute
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import PrivateRoute        from '../components/PrivateRoute';
@@ -19,12 +20,14 @@ import ProfilePage         from '../pages/ProfilePage';
 export default function AppRoutes() {
   return (
     <Routes>
+      {/* --- Rutas públicas--- */}
       <Route path="/login"    element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
+      {/* Rutas privadas / protegidas con PrivateRoute*/}
       <Route
         path="/dashboard"
         element={
@@ -33,7 +36,6 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
       <Route
         path="/family"
         element={
@@ -42,7 +44,6 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
       <Route
         path="/dashboard/create-family"
         element={
@@ -51,7 +52,6 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
       <Route
         path="/dashboard/join-family"
         element={
@@ -60,8 +60,6 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
-      {/* Lista de notificaciones */}
       <Route
         path="/dashboard/notifications"
         element={
@@ -70,8 +68,7 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
-      {/* Detalle de una notificación (marcar leída y aprobar/rechazar) */}
+      {/* Ruta de detalle de una notificacion (_id) */}
       <Route
         path="/dashboard/notifications/:nid"
         element={
@@ -80,8 +77,6 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
-      {/* La página de perfil del usuario autenticado */}
       <Route
         path="/profile"
         element={

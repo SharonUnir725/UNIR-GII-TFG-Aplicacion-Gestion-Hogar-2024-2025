@@ -1,4 +1,5 @@
 // server/src/utils/token.js
+// Funciones para generar y manejar tokens seguros usados en autenticación y validación de acciones.
 const crypto = require('crypto');
 
 /**

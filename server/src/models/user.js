@@ -1,6 +1,5 @@
 // server/src/models/user.js
 // Modelo de usuario para la aplicación que contiene información personal.
-
 const { Schema, model, Types } = require('mongoose');
 
 const UserSchema = new Schema({

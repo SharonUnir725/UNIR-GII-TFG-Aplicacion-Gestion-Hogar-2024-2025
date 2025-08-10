@@ -40,16 +40,19 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      {/* Cabecera con avatar y bienvenida */}
+      {/* [1]Cabecera con avatar, saludo y campana de notificaciones*/}
       <div className="flex items-center gap-4 mb-6">
+        {/* Avatar con fallback si no hay imagen cargado */}
         <img
           src={user.profileImage && user.profileImage.trim() !== '' ? user.profileImage : defaultAvatar}
           alt="Avatar de perfil"
           className="w-20 h-20 rounded-full border object-cover"
         />
+        {/* Saludo con nombre del usuario */}
         <div>
           <h1 className="text-3xl font-bold">👋 Hola {user.firstName}!</h1>
         </div>
+        {/* Campana de notificaciones con badge para no leídas */}
         <Link to="/dashboard/notifications" className="ml-auto relative">
           <span role="img" aria-label="notificaciones" className="text-3xl">
             🔔
@@ -62,15 +65,18 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Botones principales */}
+      {/* [2]Grid de acciones con botones principales RESPONSIVE */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Acciones cuando NO se pertenece a una familia */}
         {!user.familyId && (
           <>
+            {/* Crear familia */}
             <Link to="/dashboard/create-family">
               <button className="w-full py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700">
                 Crear una familia
               </button>
             </Link>
+            {/* Unirse a familia */}
             <Link to="/dashboard/join-family">
               <button className="w-full py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
                 Asociarse a una familia
@@ -78,6 +84,7 @@ export default function Dashboard() {
             </Link>
           </>
         )}
+        {/* Acciones cuando SI se pertenece a una familia */}
         {user.familyId && (
           <Link to="/family">
             <button className="w-full py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700">
@@ -85,11 +92,13 @@ export default function Dashboard() {
             </button>
           </Link>
         )}
+        {/* Acceso al perfil (siempre disponible) */}
         <Link to="/profile">
           <button className="w-full py-3 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700">
             Ver / Editar mi Perfil
           </button>
         </Link>
+        {/* Logout (siempre disponible) */}
         <button
           onClick={logout}
           className="w-full py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700"
